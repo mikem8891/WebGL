@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>WebGL Tutorial 1: Triangle</title>
+</head>
+<body>
+  <h1>WebGL Tutorial 1: Triangle</h1>
+  <canvas id="renderCanvas" width="800" height="600">
+    Browser does not support HTML5
+  </canvas><br>
+  Demo is above
+</body>
+
+<!-- Vertex Shader Source Code -->
+<script id="vshader" type="x-shader/x-vertex">
+
+  precision mediump float;
+  attribute vec2 vertPosition;
+
+  void main(){
+    gl_Position = vec4(vertPosition, 0.0, 1.0);
+  }
+
+</script>
+
+<!-- Fragment Shader Source Code -->
+<script id="fshader" type="x-shader/x-fragment">
+
+  precision mediump float;
+  
+  void main(){
+    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+  }
+
+</script>
+
+<!-- Initialize WebGl canvas and Render Triangle -->
+<script>
+function main(){
+  console.log('Working');
+  
+  const canvas = document.getElementById('renderCanvas');
+  var gl = canvas.getContext('webgl');
+  
+  if(!gl){
+    console.log('Attempting to use experimental context.');
+    canvas.getContext('experimental-webgl');
+  }
+  
+  if(!gl)
+    console.log('WebGL not supported');
+  
+  gl.clearColor(0.75, 0.85, 0.80, 1.00);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  
+  // Create Blank Shaders Object
+  var vertexShader   = gl.createShader(gl.VERTEX_SHADER);
+  var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+  
+  // Get Shader source code from above
+  var vertexShaderText   = document.getElementById('vshader').innerHTML;
+  var fragmentShaderText = document.getElementById('fshader').innerHTML;
+  
+  // Set shader source code
+  gl.shaderSource(vertexShader,   vertexShaderText);
+  gl.shaderSource(fragmentShader, fragmentShaderText);
+  
+  // Compiler shader with source code
+  gl.compileShader(vertexShader);
+  gl.compileShader(fragmentShader);
+  
+  // Check for compilation errors
+  if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)){
+    console.error('ERROR compiling vertex shader!', 
+                  gl.getShaderInfoLog(vertexShader));
+    return;
+  }
+  if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)){
+    console.error('ERROR compiling fragment shader!', 
+                  gl.getShaderInfoLog(fragmentShader));
+    return;
+  }
+  
+  // Create and link the program to run the shaders
+  var program = gl.createProgram();
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
+  
+  // Check for errors
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)){
+    console.error('ERROR linking program', gl.getProgramInfoLog(program));
+    return;
+  }
+  gl.validateProgram(program);
+  if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)){
+    console.error('ERROR validating program', 
+                  gl.getProgramInfoLog(program));
+    return;
+  }
+}
+
+window.onload = main;
+</script>
+</html>
