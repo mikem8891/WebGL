@@ -109,6 +109,8 @@ function main(){
   ];
   
   var triangleVertexBufferObject = gl.createBuffer();
+  gl.bindBuffer(gl.BUFFER_ARRAY, triangleVertexBufferObject);
+  gl.bufferData(gl.BUFFER_ARRAY, new Float32Array(triangleVertices), gl.STATIC_DRAW);
 }
 
 window.onload = main;
