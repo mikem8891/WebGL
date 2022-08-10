@@ -17,9 +17,13 @@
 
   precision mediump float;
   attribute vec2 vertPosition;
+  attribute vec3 vertColor;
+  
+  varying vec3 fragColor;
 
   void main(){
     gl_Position = vec4(vertPosition, 0.0, 1.0);
+    fragColor = vertColor;
   }
 
 </script>
@@ -28,9 +32,11 @@
 <script id="fshader" type="x-shader/x-fragment">
 
   precision mediump float;
+
+  varying vec3 fragColor;
   
   void main(){
-    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    gl_FragColor = vec4(fragColor, 1.0);
   }
 
 </script>
@@ -90,7 +96,8 @@ function main(){
   
   // Check for errors
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)){
-    console.error('ERROR linking program', gl.getProgramInfoLog(program));
+    console.error('ERROR linking program', 
+                  gl.getProgramInfoLog(program));
     return;
   }
   gl.validateProgram(program);
@@ -100,17 +107,55 @@ function main(){
     return;
   }
   
-  // Create buffers
+  // Specify vertices
   var triangleVertices =
-  [ // X,    Y
-     0.0,  0.5,
-    -0.5, -0.5,
-     0.5, -0.5
+  [ // X,    Y,    R,    G,    B
+     0.0,  0.5, 1.00, 1.00, 0.00,
+    -0.5, -0.5, 0.70, 0.00, 1.00,
+     0.5, -0.5, 0.10, 1.00, 0.60
   ];
   
+  // Create buffers
   var triangleVertexBufferObject = gl.createBuffer();
-  gl.bindBuffer(gl.BUFFER_ARRAY, triangleVertexBufferObject);
-  gl.bufferData(gl.BUFFER_ARRAY, new Float32Array(triangleVertices), gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexBufferObject);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleVertices), gl.STATIC_DRAW);
+  
+  var positionAttribLocation = gl.getAttribLocation(program, 'vertPosition'); 
+  var colorAttribLocation    = gl.getAttribLocation(program, 'vertColor'); 
+      // Returns '0' because this the first attribute in the shader source code
+  gl.vertexAttribPointer(
+    positionAttribLocation,  // Attribute location 
+    2,                       // Number of elements per attribute (X, Y)
+    gl.FLOAT,                // Data type of the elements
+    gl.FALSE,                // Whether the elements are normalized
+    5 * Float32Array.BYTES_PER_ELEMENT,  // Size of an individual vertex
+    0  // Offset from the beginning of a single vertex to this attribute
+  );
+  gl.vertexAttribPointer(
+    colorAttribLocation,  // Attribute location 
+    3,                    // Number of elements per attribute (R, G, B)
+    gl.FLOAT,             // Data type of the elements
+    gl.FALSE,             // Whether the elements are normalized
+    5 * Float32Array.BYTES_PER_ELEMENT,  // Size of an individual vertex
+    2 * Float32Array.BYTES_PER_ELEMENT // Offset from the beginning of a single vertex to this attribute
+  );
+  
+  gl.enableVertexAttribArray(positionAttribLocation); // Enables the attribute
+  gl.enableVertexAttribArray(colorAttribLocation); // Enables the attribute
+  
+  // Main render loop for something like a game (just for info)
+  /*
+  var loop = function () {
+    updateWorld();
+    renderWorld();
+    if (running)
+      requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+  */
+  
+  gl.useProgram(program);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
 }
 
 window.onload = main;
