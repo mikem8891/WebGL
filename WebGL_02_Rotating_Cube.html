@@ -46,9 +46,9 @@
 
 </script>
 
-<script src="lib\glmatrix\gl-matrix.js"></script>
+<script src="gl-matrix-min.js"></script>
 <!-- Initialize WebGl canvas -->
-<script >
+<script>
 function main(){
   console.log('Working');
   
@@ -159,8 +159,10 @@ function main(){
   var matView  = new Float32Array(16);
   var matProj  = new Float32Array(16);
   glMatrix.mat4.identity(matWorld);
-  glMatrix.mat4.identity(matView);
-  glMatrix.mat4.identity(matProj);
+  //glMatrix.mat4.identity(matView);
+  glMatrix.mat4.lookAt(matView, [0, 0, -5], [0, 0, 0], [0, 1, 0]);
+  //glMatrix.mat4.identity(matProj);
+  glMatrix.mat4.perspective(matProj, glMatrix.glMatrix.toRadian(45), canvas.width / canvas.width, 0.1, 1000);
   
   gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, matWorld)
   gl.uniformMatrix4fv(matViewUniformLocation,  gl.FALSE, matView)
