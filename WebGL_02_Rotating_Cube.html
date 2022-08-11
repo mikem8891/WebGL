@@ -160,7 +160,7 @@ function main(){
   var matProj  = new Float32Array(16);
   glMatrix.mat4.identity(matWorld);
   //glMatrix.mat4.identity(matView);
-  glMatrix.mat4.lookAt(matView, [0, 0, -5], [0, 0, 0], [0, 1, 0]);
+  glMatrix.mat4.lookAt(matView, [0, 0, -2], [0, 0, 0], [0, 1, 0]);
   //glMatrix.mat4.identity(matProj);
   glMatrix.mat4.perspective(matProj, glMatrix.glMatrix.toRadian(45), canvas.width / canvas.width, 0.1, 1000);
   
@@ -179,7 +179,23 @@ function main(){
   requestAnimationFrame(loop);
   */
   
-  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  // Our main render loop
+  
+  var identityMatrix = new Float32Array(16);
+  glMatrix.mat4.identity(identityMatrix);
+  var ang = 0;
+  function loop(){
+    ang = performance.now() / 1000 / 6 * 2 * Math.PI;
+    glMatrix.mat4.rotate(matWorld, identityMatrix, ang, [0, 1, 0]);
+    gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, matWorld)
+    
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    
+    requestAnimationFrame(loop); // loop is called when a frame is requested
+  }
+  requestAnimationFrame(loop);
+
 }
 
 window.onload = main;
