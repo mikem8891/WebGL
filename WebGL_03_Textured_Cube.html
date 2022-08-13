@@ -64,7 +64,7 @@ function main(){
   
   if(!gl){
     console.log('Attempting to use experimental context.');
-    canvas.getContext('experimental-webgl');
+    gl = canvas.getContext('experimental-webgl');
   }
   
   if(!gl)
