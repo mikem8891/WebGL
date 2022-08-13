@@ -285,12 +285,14 @@ function main(){
   glMatrix.mat4.identity(identityMatrix);
   var ang = 0;
   function loop(){
+    // rotates the cube
     ang = performance.now() / 1000 / 6 * 2 * Math.PI;
     glMatrix.mat4.rotate(yRotMat, identityMatrix, ang,   [0, 1, 0]);
     glMatrix.mat4.rotate(xRotMat, identityMatrix, ang/4, [1, 0, 0]);
     glMatrix.mat4.mul(matWorld, yRotMat, xRotMat);
     gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, matWorld)
     
+    // Clears the canvas
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.clear(gl.DEPTH_BUFFER_BIT);
     
