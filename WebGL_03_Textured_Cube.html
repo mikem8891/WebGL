@@ -293,6 +293,11 @@ function main(){
     gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, matWorld)
     
     gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.clear(gl.DEPTH_BUFFER_BIT);
+    
+    gl.bindTexture(gl.TEXTURE_2D, cubeTexture);
+    gl.activeTexture(gl.TEXTURE0);
+    
     gl.drawElements(gl.TRIANGLES, cubeIndices.length, gl.UNSIGNED_SHORT, 0);
     
     requestAnimationFrame(loop); // loop is called when a frame is requested
