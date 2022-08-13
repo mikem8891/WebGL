@@ -59,6 +59,7 @@
 function main(){
   console.log('Working');
   
+  // retrieve the WebGL context
   const canvas = document.getElementById('renderCanvas');
   var gl = canvas.getContext('webgl');
   
@@ -66,9 +67,10 @@ function main(){
     console.log('Attempting to use experimental context.');
     gl = canvas.getContext('experimental-webgl');
   }
-  
-  if(!gl)
+  if(!gl){
     console.log('WebGL not supported');
+    return;
+  }
   
   // Clears the canvas
   gl.clearColor(0.75, 0.85, 0.80, 1.00);
