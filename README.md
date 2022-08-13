@@ -4,3 +4,5 @@
 Demo 1: [Simple triangle rendered in WebGL](WebGL_01_Triangle.html)
 
 Demo 2: [Rotating cube rendered in WebGL](WebGL_02_Rotating_Cube.html)
+
+Demo 3: [Textured cube rendered in WebGL](WebGL_03_Textured_Cube.html)
