@@ -1,5 +1,5 @@
 # WebGL
- Experimenting with WebGL
+ Experimenting with WebGL. The demos below are based on tutorials by 
 
 Demo 1: [Simple triangle rendered in WebGL](WebGL_01_Triangle.html)
 
