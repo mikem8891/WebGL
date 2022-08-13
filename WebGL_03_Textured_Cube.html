@@ -2,15 +2,18 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>WebGL Tutorial 2: Rotating Cube</title>
+  <title>WebGL Tutorial 3: Textured Cube</title>
 </head>
 <body>
-  <h1>WebGL Tutorial 2: Rotating Cube</h1>
+  <h1>WebGL Tutorial 3: Textured Cube</h1>
   <canvas id="renderCanvas" width="800" height="600">
     Browser does not support HTML5
   </canvas><br>
   Demo is above
 </body>
+
+<!-- Texture from (https://opengameart.org/content/wooden-crate) -->
+<img id="crate-image" src="crate_front.png" hidden></img>
 
 <!-- Vertex Shader Source Code -->
 <script id="vshader" type="x-shader/x-vertex">
@@ -22,13 +25,13 @@
   uniform mat4 mProj;
   
   attribute vec3 vertPosition;
-  attribute vec3 vertColor;
+  attribute vec2 vertTexCoord;
   
-  varying vec3 fragColor;
+  varying vec2 fragTexCoord;
 
   void main(){
     gl_Position = mProj * mView * mWorld * vec4(vertPosition, 1.0);
-    fragColor = vertColor;
+    fragTexCoord = vertTexCoord;
   }
 
 </script>
@@ -37,16 +40,20 @@
 <script id="fshader" type="x-shader/x-fragment">
 
   precision mediump float;
-
-  varying vec3 fragColor;
+  
+  uniform sampler2D sampler;
+  
+  varying vec2 fragTexCoord;
   
   void main(){
-    gl_FragColor = vec4(fragColor, 1.0);
+    gl_FragColor = texture2D(sampler, fragTexCoord);
   }
 
 </script>
+
 <!-- Library for graphics related maxtrix math -->
 <script src="gl-matrix-min.js"></script>
+
 <!-- Initialize WebGl canvas -->
 <script>
 function main(){
@@ -127,42 +134,42 @@ function main(){
   
   // Specify vertices
   var cubeVertices =
-  [ // X,    Y,    Z,    R,    G,    B
+  [ // X,    Y,    Z,    S,   T
     // Top (+Y)
-    -1.0,  1.0, -1.0, 0.50, 0.50, 0.50, //  0
-    -1.0,  1.0,  1.0, 0.50, 0.50, 0.50, //  1
-     1.0,  1.0, -1.0, 0.50, 0.50, 0.50, //  2
-     1.0,  1.0,  1.0, 0.50, 0.50, 0.50, //  3
-    
-    // Left (-X)
-    -1.0,  1.0,  1.0, 0.75, 0.25, 0.50, //  4
-    -1.0, -1.0,  1.0, 0.75, 0.25, 0.50, //  5
-    -1.0, -1.0, -1.0, 0.75, 0.25, 0.50, //  6
-    -1.0,  1.0, -1.0, 0.75, 0.25, 0.50, //  7
-    
-    // Right (+X)
-     1.0,  1.0,  1.0, 0.25, 0.25, 0.75, //  8
-     1.0, -1.0,  1.0, 0.25, 0.25, 0.75, //  9
-     1.0, -1.0, -1.0, 0.25, 0.25, 0.75, // 10
-     1.0,  1.0, -1.0, 0.25, 0.25, 0.75, // 11
-    
-    // Front (+Z)
-     1.0,  1.0,  1.0, 1.00, 0.00, 0.15, // 12
-     1.0, -1.0,  1.0, 1.00, 0.00, 0.15, // 13
-    -1.0, -1.0,  1.0, 1.00, 0.00, 0.15, // 14
-    -1.0,  1.0,  1.0, 1.00, 0.00, 0.15, // 15
-    
-    // Back (-Z)
-     1.0,  1.0, -1.0, 0.00, 1.00, 0.15, // 16
-     1.0, -1.0, -1.0, 0.00, 1.00, 0.15, // 17
-    -1.0, -1.0, -1.0, 0.00, 1.00, 0.15, // 18
-    -1.0,  1.0, -1.0, 0.00, 1.00, 0.15, // 19
-    
-    // Bottom (-Y)
-    -1.0, -1.0, -1.0, 0.50, 0.50, 1.00, // 20
-    -1.0, -1.0,  1.0, 0.50, 0.50, 1.00, // 21
-     1.0, -1.0, -1.0, 0.50, 0.50, 1.00, // 22
-     1.0, -1.0,  1.0, 0.50, 0.50, 1.00, // 23
+    -1.0,  1.0, -1.0,  0.0, 0.0, //  0
+    -1.0,  1.0,  1.0,  0.0, 1.0, //  1
+     1.0,  1.0, -1.0,  1.0, 0.0, //  2
+     1.0,  1.0,  1.0,  1.0, 1.0, //  3
+                      
+    // Left (-X)      
+    -1.0,  1.0,  1.0,  1.0, 1.0, //  4
+    -1.0, -1.0,  1.0,  0.0, 1.0, //  5
+    -1.0, -1.0, -1.0,  0.0, 0.0, //  6
+    -1.0,  1.0, -1.0,  1.0, 0.0, //  7
+                      
+    // Right (+X)     
+     1.0,  1.0,  1.0,  1.0, 1.0, //  8
+     1.0, -1.0,  1.0,  0.0, 1.0, //  9
+     1.0, -1.0, -1.0,  0.0, 0.0, // 10
+     1.0,  1.0, -1.0,  1.0, 0.0, // 11
+                      
+    // Front (+Z)     
+     1.0,  1.0,  1.0,  1.0, 1.0, // 12
+     1.0, -1.0,  1.0,  1.0, 0.0, // 13
+    -1.0, -1.0,  1.0,  0.0, 0.0, // 14
+    -1.0,  1.0,  1.0,  0.0, 1.0, // 15
+                      
+    // Back (-Z)      
+     1.0,  1.0, -1.0,  1.0, 1.0, // 16
+     1.0, -1.0, -1.0,  1.0, 0.0, // 17
+    -1.0, -1.0, -1.0,  0.0, 0.0, // 18
+    -1.0,  1.0, -1.0,  0.0, 1.0, // 19
+                      
+    // Bottom (-Y)    
+    -1.0, -1.0, -1.0,  0.0, 0.0, // 20
+    -1.0, -1.0,  1.0,  0.0, 1.0, // 21
+     1.0, -1.0, -1.0,  1.0, 0.0, // 22
+     1.0, -1.0,  1.0,  1.0, 1.0, // 23
   ];
   
   var cubeIndices = 
@@ -203,26 +210,44 @@ function main(){
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeIndices), gl.STATIC_DRAW);
   
   var positionAttribLocation = gl.getAttribLocation(program, 'vertPosition'); 
-  var colorAttribLocation    = gl.getAttribLocation(program, 'vertColor'); 
+  var texCoordAttribLocation = gl.getAttribLocation(program, 'vertTexCoord'); 
   gl.vertexAttribPointer(
     positionAttribLocation,  // Attribute location 
     3,                       // Number of elements per attribute (X, Y, Z)
     gl.FLOAT,                // Data type of the elements
     gl.FALSE,                // Whether the elements are normalized
-    6 * Float32Array.BYTES_PER_ELEMENT,  // Size of an individual vertex
+    5 * Float32Array.BYTES_PER_ELEMENT,  // Size of an individual vertex
     0  // Offset from the beginning of a single vertex to this attribute
   );
   gl.vertexAttribPointer(
-    colorAttribLocation,  // Attribute location 
-    3,                    // Number of elements per attribute (R, G, B)
-    gl.FLOAT,             // Data type of the elements
-    gl.FALSE,             // Whether the elements are normalized
-    6 * Float32Array.BYTES_PER_ELEMENT,  // Size of an individual vertex
+    texCoordAttribLocation,  // Attribute location 
+    2,                       // Number of elements per attribute (S, T)
+    gl.FLOAT,                // Data type of the elements
+    gl.FALSE,                // Whether the elements are normalized
+    5 * Float32Array.BYTES_PER_ELEMENT,  // Size of an individual vertex
     3 * Float32Array.BYTES_PER_ELEMENT // Offset from the beginning of a single vertex to this attribute
   );
   gl.enableVertexAttribArray(positionAttribLocation); // Enables the attribute
-  gl.enableVertexAttribArray(colorAttribLocation); // Enables the attribute
+  gl.enableVertexAttribArray(texCoordAttribLocation); // Enables the attribute
   
+  // Create texture
+  var cubeTexture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, cubeTexture);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+  gl.texImage2D(
+    gl.TEXTURE_2D, // target (a 2D texture)
+    0,             // level (level 0 is the base image)
+    gl.RGBA,       // internal format 
+    gl.RGBA,       // format (in WebGL this needs to match the internal format)
+    gl.UNSIGNED_BYTE, // type (8 bits per channel for gl.RGBA)
+    document.getElementById('crate-image')  // pixels (HTMLImageElement)
+  );
+  gl.bindTexture(gl.TEXTURE_2D, null);
+    
+  // Tells WebGL what program to use
   gl.useProgram(program);
 
   //Set uniforms (shader constants)
@@ -260,13 +285,20 @@ function main(){
   glMatrix.mat4.identity(identityMatrix);
   var ang = 0;
   function loop(){
+    // rotates the cube
     ang = performance.now() / 1000 / 6 * 2 * Math.PI;
     glMatrix.mat4.rotate(yRotMat, identityMatrix, ang,   [0, 1, 0]);
     glMatrix.mat4.rotate(xRotMat, identityMatrix, ang/4, [1, 0, 0]);
     glMatrix.mat4.mul(matWorld, yRotMat, xRotMat);
     gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, matWorld)
     
+    // Clears the canvas
     gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.clear(gl.DEPTH_BUFFER_BIT);
+    
+    gl.bindTexture(gl.TEXTURE_2D, cubeTexture);
+    gl.activeTexture(gl.TEXTURE0);
+    
     gl.drawElements(gl.TRIANGLES, cubeIndices.length, gl.UNSIGNED_SHORT, 0);
     
     requestAnimationFrame(loop); // loop is called when a frame is requested
