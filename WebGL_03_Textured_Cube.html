@@ -237,8 +237,6 @@ function main(){
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-  gl.bindTexture(gl.TEXTURE_2D, null);
-  
   gl.texImage2D(
     gl.TEXTURE_2D, // target (a 2D texture)
     0,             // level (level 0 is the base image)
@@ -247,7 +245,8 @@ function main(){
     gl.UNSIGNED_BYTE, // type (8 bits per channel for gl.RGBA)
     document.getElementById('crate-image')  // pixels (HTMLImageElement)
   );
-  
+  gl.bindTexture(gl.TEXTURE_2D, null);
+    
   // Tells WebGL what program to use
   gl.useProgram(program);
 
