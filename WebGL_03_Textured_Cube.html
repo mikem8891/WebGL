@@ -135,6 +135,9 @@ function main(){
   }
   
   // Specify vertices
+  // X, Y, Z are space coordinates
+  // S, T are texture coordinates
+  // vertex indices are on the right
   var cubeVertices =
   [ // X,    Y,    Z,    S,   T
     // Top (+Y)
@@ -247,8 +250,9 @@ function main(){
     gl.UNSIGNED_BYTE, // type (8 bits per channel for gl.RGBA)
     document.getElementById('crate-image')  // pixels (HTMLImageElement)
   );
-  gl.bindTexture(gl.TEXTURE_2D, null);
-    
+  gl.activeTexture(gl.TEXTURE0);
+  //gl.bindTexture(gl.TEXTURE_2D, null);
+  
   // Tells WebGL what program to use
   gl.useProgram(program);
 
@@ -286,6 +290,7 @@ function main(){
   var yRotMat        = new Float32Array(16);
   glMatrix.mat4.identity(identityMatrix);
   var ang = 0;
+
   function loop(){
     // rotates the cube
     ang = performance.now() / 1000 / 6 * 2 * Math.PI;
@@ -297,9 +302,6 @@ function main(){
     // Clears the canvas
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.clear(gl.DEPTH_BUFFER_BIT);
-    
-    gl.bindTexture(gl.TEXTURE_2D, cubeTexture);
-    gl.activeTexture(gl.TEXTURE0);
     
     gl.drawElements(gl.TRIANGLES, cubeIndices.length, gl.UNSIGNED_SHORT, 0);
     
