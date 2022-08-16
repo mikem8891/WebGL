@@ -75,7 +75,7 @@ function loadAssets(){
     if (200 <= status && status < 300){
       return responce.text();
     } else {
-      throw 'Failed to load text from:  ' + url;
+      throw 'Failed to load text from: ' + url;
     }
   }
   var loadJSON = async function (url) {
@@ -98,7 +98,7 @@ function loadAssets(){
     .catch(function (err) {console.error(err);});
 }
 
-function runWebGL(){
+function runWebGL(texture, vertexShaderText, fragmentShaderText, model){
   console.log('Working');
   
   const canvas = document.getElementById('renderCanvas');
@@ -130,10 +130,6 @@ function runWebGL(){
   // Create Blank Shaders Object
   var vertexShader   = gl.createShader(gl.VERTEX_SHADER);
   var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-  
-  // Get Shader source code from above
-  var vertexShaderText   = document.getElementById('vshader').innerHTML;
-  var fragmentShaderText = document.getElementById('fshader').innerHTML;
   
   // Set shader source code
   gl.shaderSource(vertexShader,   vertexShaderText);
@@ -285,7 +281,7 @@ function runWebGL(){
     gl.RGBA,       // internal format 
     gl.RGBA,       // format (in WebGL this needs to match the internal format)
     gl.UNSIGNED_BYTE, // type (8 bits per channel for gl.RGBA)
-    document.getElementById('crate-image')  // pixels (HTMLImageElement)
+    texture  // pixels (HTMLImageElement)
   );
   gl.bindTexture(gl.TEXTURE_2D, null);
     
