@@ -75,7 +75,7 @@ function loadAssets(){
     if (200 <= status && status < 300){
       return responce.text();
     } else {
-      throw 'Failed to load text from: ' + url;
+      throw 'Failed to load text from:  ' + url;
     }
   }
   var loadJSON = async function (url) {
