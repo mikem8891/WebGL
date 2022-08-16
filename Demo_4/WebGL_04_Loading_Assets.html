@@ -12,45 +12,6 @@
   Demo is above
 </body>
 
-<!-- Texture from (https://opengameart.org/content/wooden-crate) -->
-<img id="loaded-image"></img>
-
-<!-- Vertex Shader Source Code -->
-<script id="vshader" type="x-shader/x-vertex">
-
-  precision mediump float;
-  
-  uniform mat4 mWorld;
-  uniform mat4 mView;
-  uniform mat4 mProj;
-  
-  attribute vec3 vertPosition;
-  attribute vec2 vertTexCoord;
-  
-  varying vec2 fragTexCoord;
-
-  void main(){
-    gl_Position = mProj * mView * mWorld * vec4(vertPosition, 1.0);
-    fragTexCoord = vertTexCoord;
-  }
-
-</script>
-
-<!-- Fragment Shader Source Code -->
-<script id="fshader" type="x-shader/x-fragment">
-
-  precision mediump float;
-  
-  uniform sampler2D sampler;
-  
-  varying vec2 fragTexCoord;
-  
-  void main(){
-    gl_FragColor = texture2D(sampler, fragTexCoord);
-  }
-
-</script>
-
 <!-- Library for graphics related maxtrix math -->
 <script src="../lib/gl-matrix-min.js"></script>
 
@@ -324,7 +285,7 @@ function runWebGL(texture, vertexShaderText, fragmentShaderText, model){
   var ang = 0;
   function loop(){
     // rotates the cube
-    ang = performance.now() / 1000 / 6 * 2 * Math.PI;
+    ang = performance.now() / 1000 / 10 * 2 * Math.PI;
     glMatrix.mat4.rotate(yRotMat, identityMatrix, ang,   [0, 1, 0]);
     glMatrix.mat4.rotate(xRotMat, identityMatrix, ang/4, [1, 0, 0]);
     glMatrix.mat4.mul(matWorld, yRotMat, xRotMat);
