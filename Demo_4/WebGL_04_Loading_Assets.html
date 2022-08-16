@@ -13,7 +13,7 @@
 </body>
 
 <!-- Texture from (https://opengameart.org/content/wooden-crate) -->
-<img id="crate-image" src="crate_front.png" hidden></img>
+<img id="loaded-image"></img>
 
 <!-- Vertex Shader Source Code -->
 <script id="vshader" type="x-shader/x-vertex">
@@ -56,7 +56,49 @@
 
 <!-- Initialize WebGl canvas -->
 <script>
-function main(){
+function main(){loadAssets();}
+
+function loadAssets(){
+  var loadImage  = function (url) {
+    return new Promise( function (resolve, reject) {
+      let img = new Image();
+      img.onload = function () {return resolve(img);};
+      img.onerror = function () { 
+        return reject('Failed to load image from: ' + url);
+      };
+      img.src = url;
+    });
+  }
+  var loadText = async function (url) {
+    let responce = await fetch(url);
+    let status = responce.status;
+    if (200 <= status && status < 300){
+      return responce.text();
+    } else {
+      throw 'Failed to load text from: ' + url;
+    }
+  }
+  var loadJSON = async function (url) {
+    let responce = await fetch(url);
+    let status = responce.status;
+    if (200 <= status && status < 300){
+      return responce.json();
+    } else {
+      throw 'Failed to load JSON from: ' + url;
+    }
+  }
+  
+  Promise.all([
+    loadImage('earth_true_color.jpg'),
+    loadText('vshader.glsl'),
+    loadText('fshader.glsl'),
+    loadJSON('model.json')])
+    .then(function ([texture, vertShader, fragShader, model]) {
+      runWebGL(texture, vertShader, fragShader, model);})
+    .catch(function (err) {console.error(err);});
+}
+
+function runWebGL(){
   console.log('Working');
   
   const canvas = document.getElementById('renderCanvas');
