@@ -1,3 +1,4 @@
 {
-  "vertex": [1, 2, 3]
+  "vertex": [1, 2, 3],
+  "change": "this is different"
 }
