@@ -56,7 +56,7 @@ function loadAssets(){
     loadText('fshader.glsl'),
     loadJSON('model.json')])
     .then(function ([texture, vertShader, fragShader, model]) {
-      runWebGL(vertShader, fragShader, model, texture);})
+      runDemo(vertShader, fragShader, model, texture);})
     .catch(function (err) {console.error(err);});
 }
 
