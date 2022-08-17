@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Icosahedron JSON</title>
+</head>
+<body>
+
+<h1>Icosahedron JSON</h1>
+
+<textarea id="output">
+  
+  
+</textarea>
+
+</body>
+<script>
+  var output = {};
+  var vertices = [];
+  
+  var z = 1/Math.sqrt(5);
+  var r = 2*z;
+  
+  for (let i=0; i<5; i++)
+    vertices.push(0, 1, 0);
+  for (let i=0; i<=5; i++){
+    let theta = i*2/5*Math.PI;
+    vertices.push(r*Math.sin(theta), z, r*Math.cos(theta));
+  }
+  for (let i=0; i<=5; i++){
+    let theta = (i*2+1)/5*Math.PI;
+    vertices.push(r*Math.sin(theta), -z, r*Math.cos(theta));
+  }
+  for (let i=0; i<5; i++)
+    vertices.push(0, -1, 0);  
+  output['vertices'] = vertices;
+  
+  document.getElementById('output').value = JSON.stringify(output);
+</script>
+
+</html>
