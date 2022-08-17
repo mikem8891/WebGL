@@ -17,6 +17,7 @@
 
 <!-- Initialize WebGl canvas -->
 <script>
+
 function main(){loadAssets();}
 
 function loadAssets(){
@@ -55,12 +56,15 @@ function loadAssets(){
     loadText('fshader.glsl'),
     loadJSON('model.json')])
     .then(function ([texture, vertShader, fragShader, model]) {
-      runWebGL(texture, vertShader, fragShader, model);})
+      runWebGL(vertShader, fragShader, model, texture);})
     .catch(function (err) {console.error(err);});
 }
 
-function runWebGL(texture, vertexShaderText, fragmentShaderText, model){
+var Model;
+
+function runDemo(vertexShaderText, fragmentShaderText, model, texture){
   console.log('Working');
+  Model = model;
   
   const canvas = document.getElementById('renderCanvas');
   var gl = canvas.getContext('webgl');
