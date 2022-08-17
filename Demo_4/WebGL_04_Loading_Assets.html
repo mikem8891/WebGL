@@ -200,7 +200,8 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture){
     gl.UNSIGNED_BYTE, // type (8 bits per channel for gl.RGBA)
     texture  // pixels (HTMLImageElement)
   );
-  gl.bindTexture(gl.TEXTURE_2D, null);
+  gl.activeTexture(gl.TEXTURE0);
+  //gl.bindTexture(gl.TEXTURE_2D, null);
     
   // Tells WebGL what program to use
   gl.useProgram(program);
@@ -251,8 +252,8 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture){
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.clear(gl.DEPTH_BUFFER_BIT);
     
-    gl.bindTexture(gl.TEXTURE_2D, earthTexture);
-    gl.activeTexture(gl.TEXTURE0);
+//    gl.bindTexture(gl.TEXTURE_2D, earthTexture);
+//    gl.activeTexture(gl.TEXTURE0);
     
     gl.drawElements(gl.TRIANGLES, earthIndices.length, gl.UNSIGNED_SHORT, 0);
     
