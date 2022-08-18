@@ -254,7 +254,7 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture){
     ang = performance.now() / 1000 / 10 * 2 * Math.PI;
     glMatrix.mat4.rotate(yRotMat, identityMatrix, ang,   [0, 1, 0]);
     glMatrix.mat4.rotate(xRotMat, identityMatrix, Math.PI/3*Math.sin(ang/3), [1, 0, 0]);
-    glMatrix.mat4.mul(matWorld, xRotMat, yRotMat);
+    glMatrix.mat4.mul(matWorld, yRotMat, xRotMat);
     gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, matWorld)
     
     // Clears the canvas
