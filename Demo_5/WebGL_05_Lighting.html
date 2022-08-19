@@ -26,7 +26,24 @@
 <!-- Initialize WebGl canvas -->
 <script>
 
-function main(){loadAssets();}
+function main(){
+  var canvas = document.getElementById("renderCanvas");
+  
+  var desiredWidthInCSSPixels  = canvas.width;
+  var desiredHeightInCSSPixels = canvas.height;
+
+  // set the display size of the canvas.
+  canvas.style.width = desiredWidthInCSSPixels + "px";
+  canvas.style.height = desiredHeightInCSSPixels + "px";
+
+  // set the size of the drawingBuffer
+  var devicePixelRatio = window.devicePixelRatio || 1;
+  canvas.width  = Math.round(desiredWidthInCSSPixels  * devicePixelRatio);
+  canvas.height = Math.round(desiredHeightInCSSPixels * devicePixelRatio);
+  
+  // load files and run the demo
+  loadAssets();
+}
 
 function loadAssets(){
   var loadImage  = function (url) {
