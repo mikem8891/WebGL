@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>WebGL Demo 4: Loading External Meshes and Shaders</title>
+  <title>WebGL Demo 5: Loading External Meshes and Shaders</title>
   <style>
   body{
     background-color: #111;
@@ -13,7 +13,7 @@
   </style>
 </head>
 <body>
-  <h1>WebGL Demo 4: Loading External Meshes and Shaders</h1>
+  <h1>WebGL Demo 5: Loading External Meshes and Shaders</h1>
   <canvas id="renderCanvas" width="800" height="600">
     Browser does not support HTML5
   </canvas><br>
@@ -68,11 +68,11 @@ function loadAssets(){
     .catch(function (err) {console.error(err);});
 }
 
-var Model;
+//var Model; // For debugging
 
 function runDemo(vertexShaderText, fragmentShaderText, model, texture){
   console.log('Working');
-  Model = model;
+//  Model = model; // For debugging
   
   const canvas = document.getElementById('renderCanvas');
   var gl = canvas.getContext('webgl');
@@ -147,6 +147,10 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture){
   // Typically this is 'model.meshes[i].vertices' in a JSON model;
   var earthVertices = model.vertices;
   
+  // Specify normals
+  // Typically this is 'model.meshes[i].normals' in a JSON model;
+  var earthNormals = model.normals;
+  
   // Specify the texture coordinates
   // Typically this is 'model.meshes[i].texturecoords[j]' in a JSON model;
   var earthTexCoords = model.texCoordin;
@@ -165,6 +169,10 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture){
   gl.bindBuffer(gl.ARRAY_BUFFER, earthTexCoordBufferObject);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(earthTexCoords), gl.STATIC_DRAW);
   
+  var earthNormBufferObject = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, earthNormBufferObject);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(earthNormBufferObject), gl.STATIC_DRAW);
+  
   var earthIndexBufferObject = gl.createBuffer();
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, earthIndexBufferObject);
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(earthIndices), gl.STATIC_DRAW);
@@ -180,6 +188,18 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture){
     0  // Offset from the beginning of a single vertex to this attribute
   );
   gl.enableVertexAttribArray(positionAttribLocation); // Enables the attribute
+  
+  gl.bindBuffer(gl.ARRAY_BUFFER, earthNormBufferObject);
+  var normalAttribLocation = gl.getAttribLocation(program, 'vertNormal'); 
+  gl.vertexAttribPointer(
+    normalAttribLocation,  // Attribute location 
+    3,                     // Number of elements per attribute (X, Y, Z)
+    gl.FLOAT,              // Data type of the elements
+    gl.TRUE,               // Whether the elements are normalized
+    3 * Float32Array.BYTES_PER_ELEMENT,  // Size of an individual vertex
+    0  // Offset from the beginning of a single vertex to this attribute
+  );
+  gl.enableVertexAttribArray(normalAttribLocation); // Enables the attribute
   
   gl.bindBuffer(gl.ARRAY_BUFFER, earthTexCoordBufferObject);
   var texCoordAttribLocation = gl.getAttribLocation(program, 'vertTexCoord'); 
