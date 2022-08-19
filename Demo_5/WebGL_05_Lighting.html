@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>WebGL Demo 5: Loading External Meshes and Shaders</title>
+  <title>WebGL Demo 5: Lighting</title>
   <style>
   body{
     background-color: #111;
@@ -13,7 +13,7 @@
   </style>
 </head>
 <body>
-  <h1>WebGL Demo 5: Loading External Meshes and Shaders</h1>
+  <h1>WebGL Demo 5: Lighting</h1>
   <canvas id="renderCanvas" width="800" height="600">
     Browser does not support HTML5
   </canvas><br>
@@ -62,7 +62,7 @@ function loadAssets(){
     loadImage('earth_true_color.jpg'),
     loadText('vshader.glsl'),
     loadText('fshader.glsl'),
-    loadJSON('model.json')])
+    loadJSON('round_icosahedron.json')])
     .then(function ([texture, vertShader, fragShader, model]) {
       runDemo(vertShader, fragShader, model, texture);})
     .catch(function (err) {console.error(err);});
@@ -252,7 +252,6 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture){
   gl.uniformMatrix4fv(matProjUniformLocation,  gl.FALSE, matProj)
   
   // Lighting information
-  
   gl.useProgram(program);
   var ambLightIntUniformLocation = gl.getUniformLocation(program, 'ambLightInt'); 
   var sunlightIntUniformLocation = gl.getUniformLocation(program, 'sun.color'); 
@@ -282,7 +281,7 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture){
   var ang = 0;
   function loop(){
     // rotates the earth
-    ang = performance.now() / 1000 / 10 * 2 * Math.PI;
+    ang = performance.now() / 1000 / 20 * 2 * Math.PI;
     glMatrix.mat4.rotate(yRotMat, identityMatrix, ang,   [0, 1, 0]);
     glMatrix.mat4.rotate(xRotMat, identityMatrix, Math.PI/3*Math.sin(ang/3), [1, 0, 0]);
     glMatrix.mat4.mul(matWorld, xRotMat, yRotMat);
