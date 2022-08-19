@@ -1,4 +1,5 @@
 // vertex shader
+
 precision mediump float;
 
 uniform mat4 mWorld;
@@ -13,7 +14,7 @@ varying vec2 fragTexCoord;
 varying vec3 fragNormal;
 
 void main(){
-  gl_Position = mProj * mView * mWorld * vec4(vertPosition, 1.0);
-  fragNormal   = vertNormal;
+  gl_Position  = mProj * mView * mWorld * vec4(vertPosition, 1.0);
+  fragNormal   = (mWorld * vec4(vertNormal, 0.0)).xyz;
   fragTexCoord = vertTexCoord;
 }

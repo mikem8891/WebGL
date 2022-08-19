@@ -171,7 +171,7 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture){
   
   var earthNormBufferObject = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, earthNormBufferObject);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(earthNormBufferObject), gl.STATIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(earthNormals), gl.STATIC_DRAW);
   
   var earthIndexBufferObject = gl.createBuffer();
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, earthIndexBufferObject);
@@ -251,7 +251,18 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture){
   gl.uniformMatrix4fv(matViewUniformLocation,  gl.FALSE, matView)
   gl.uniformMatrix4fv(matProjUniformLocation,  gl.FALSE, matProj)
   
-  // Main render loop for something like a game (just for info)
+  // Lighting information
+  
+  gl.useProgram(program);
+  var ambLightIntUniformLocation = gl.getUniformLocation(program, 'ambLightInt'); 
+  var sunlightIntUniformLocation = gl.getUniformLocation(program, 'sun.color'); 
+  var sunlightDirUniformLocation = gl.getUniformLocation(program, 'sun.direction'); 
+  
+  gl.uniform3f(ambLightIntUniformLocation,  0.1,  0.1,  0.1);
+  gl.uniform3f(sunlightIntUniformLocation,  1.5,  1.5,  1.5);
+  gl.uniform3f(sunlightDirUniformLocation, -3.0,  1.0, -4.0);
+  
+  // Main render loop for something like a game in JS (just for info)
   /*
   var loop = function () {
     updateWorld();
