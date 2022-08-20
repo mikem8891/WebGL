@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Mandelbrot Explorer</title>
+<style>
+* {
+  margin: 0px;
+  padding: 0px;
+  position: absolute;
+}
+</style>
+</head>
+<body>
+  <canvas id="renderCanvas">
+    Browser does not support HTML5
+  </canvas>
+
+</body>
+<script>
+
+const CANVAS = document.getElementById('renderCanvas');
+var gl;
+
+function main(){
+  loadShaders()
+    .then(runDemo)
+    .catch(function(e){console.error(e)});
+}
+
+async function loadShaders(){
+  
+  var loadText = async function (url) {
+    let responce = await fetch(url);
+    let status = responce.status;
+    if (200 <= status && status < 300){
+      return responce.text();
+    } else {
+      throw 'Failed to load text from: ' + url;
+    }
+  }
+  
+  var vShader = await loadText('mandel.vs.glsl');
+  var fShader = await loadText('mandel.fs.glsl');
+  
+  return [vShader, fShader];
+}
+
+function runDemo([mandelVS, mandelFS]){
+  
+  console.log([mandelVS, mandelFS]);
+  
+  gl = CANVAS.getContext('webgl');
+  
+  if(!gl){
+    console.log('Attempting to use experimental context.');
+    CANVAS.getContext('experimental-webgl');
+  }
+  
+  if(!gl){
+    console.error('WebGL not supported');
+    return;
+  }
+  
+  // Clears the canvas
+  gl.clearColor(0.0, 0.0, 0.0, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.clear(gl.DEPTH_BUFFER_BIT);
+  
+  resizeWindow();
+  
+  //render loop
+  
+  var loop = function(){
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.clear(gl.DEPTH_BUFFER_BIT);
+    requestAnimationFrame(loop);
+  }
+  
+  requestAnimationFrame(loop);
+}
+
+function resizeWindow(evt){
+  console.log('window was resized');
+
+  if (!CANVAS){
+    return;
+  }
+  
+  CANVAS.width  = window.innerWidth;
+  CANVAS.height = window.innerHeight;
+  
+  gl.viewport(0, 0, CANVAS.width, CANVAS.height);
+}
+
+window.onresize = resizeWindow;
+
+window.onload = main;
+</script>
+</html>
