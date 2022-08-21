@@ -37,12 +37,17 @@ void main(){
     iterations += 1.0;
   }
   
-  float inten = iterations / maxIterations;
+  vec3 setComColor = vec3(0.0, 0.0, 1.0);
   
   if (iterations >= maxIterations){
     discard;
   } else {
-    gl_FragColor = vec4(inten, inten, 1.0, 1.0);
+    setComColor = vec3(
+      max(min(4.0*(iterations - maxIterations/4.0)/maxIterations, -2.0*((iterations-maxIterations)/maxIterations)), 0.0),
+      max(min(4.0*iterations/maxIterations, 1.0 - 4.0*((iterations-maxIterations/4.0)/maxIterations)), 0.0), 
+      max(max(1.0 - 4.0*iterations/(maxIterations), 2.0*(iterations - maxIterations/2.0)), 0.0)
+    );
+    gl_FragColor = vec4(setComColor, 1.0);
   }
 }
  
