@@ -10,3 +10,7 @@ Demo 3: [Textured cube rendered in WebGL](WebGL_03_Textured_Cube.html)
 Demo 4: [External files rendered in WebGL](Demo_4/WebGL_04_Loading_Assets.html)
 
 Demo 5: [Lighting in WebGL](Demo_5/WebGL_05_Lighting.html)
+
+Other
+
+[Mandelbrot Set Explorer](Mandelbrot/) (computationally intensive)
