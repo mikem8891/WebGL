@@ -189,6 +189,8 @@ function runDemo([mandelVS, mandelFS]){
   
   requestAnimationFrame(render);
   
+  var lastTouches;
+  
   // On window resize event to rescale the canvas
   var resizeCanvas = function(){
     if (!CANVAS)
@@ -239,24 +241,85 @@ function runDemo([mandelVS, mandelFS]){
   
   // On mouse drag, pan accross the canvas
   var panView = function(evt){
-    if (evt.buttons == 1){
+    var shouldPan = false;
+    var dx, dy;
+    if (evt.touches && evt.touches.length == 1){ // pan gesture
+      if (lastTouches.length == 1){
+        shouldPan = true;
+        dx = evt.touches[0].clientX - lastTouches[0].clientX;
+        dy = evt.touches[0].clientY - lastTouches[0].clientY;
+      }
+      lastTouches = evt.touches;
+    } else if (evt.buttons && evt.buttons == 1){ // click and drag to pan
+      shouldPan = true;
+      dx = evt.movementX;
+      dy = evt.movementY;
+    } 
+    if (shouldPan){
       var rRange = maxR - minR;
       var iRange = maxI - minI;
       
-      var rDelta = (evt.movementX / CANVAS.width)  * rRange;
-      var iDelta = (evt.movementY / CANVAS.height) * iRange;
+      var rDelta = (dx / CANVAS.width)  * rRange;
+      var iDelta = (dy / CANVAS.height) * iRange;
       
       minR -= rDelta;
       maxR -= rDelta;
       minI += iDelta;
       maxI += iDelta;
+    } else if (evt.touches && evt.touches.length == 2){
+      if (lastTouches.length == 2){
+        var oldX0 = lastTouches[0].clientX,
+            oldY0 = lastTouches[0].clientY,
+            oldX1 = lastTouches[1].clientX,
+            oldY1 = lastTouches[1].clientY;
+        var oldXctr = (oldX0 + oldX1)/2,
+            oldYctr = (oldY0 + oldY1)/2;
+        var newX0 = evt.touches[0].clientX,
+            newY0 = evt.touches[0].clientY,
+            newX1 = evt.touches[1].clientX,
+            newY1 = evt.touches[1].clientY;
+        var newXctr = (newX0 + newX1)/2,
+            newYctr = (newY0 + newY1)/2;
+        var oldDist = Math.hypot(oldX1 - oldX0, oldY1 - oldY0);
+        var newDist = Math.hypot(newX1 - newX0, newY1 - newY0);
+        dx = newXctr - oldXctr;
+        dy = newYctr - oldYctr;
+        var rRange = maxR - minR;
+        var iRange = maxI - minI;
+      
+        var rDelta = (dx / CANVAS.width)  * rRange;
+        var iDelta = (dy / CANVAS.height) * iRange;
+      
+        minR -= rDelta;
+        maxR -= rDelta;
+        minI += iDelta;
+        maxI += iDelta;
+        
+        var x = minR + rRange * (newXctr / CANVAS.width);
+        var y = maxI - iRange  * (newYctr / CANVAS.height);
+        
+        rRange *= oldDist/newDist;
+        iRange *= oldDist/newDist;
+        
+        minR = x - rRange * (newXctr / CANVAS.width);
+        maxI = y + iRange * (newYctr / CANVAS.height);
+    
+        maxR = minR + rRange;
+        minI = maxI - iRange;
+      }
+      lastTouches = evt.touches;
     }
+    
     requestAnimationFrame(render);
   }
   
   window.onresize = resizeCanvas;
   window.onwheel  = changeZoom;
   window.onmousemove = panView;
+  window.ontouchmove = panView;
+  window.ontouchstart = function(evt){
+    lastTouches = evt.touches;
+  }
   
   window.onresize();
 }
