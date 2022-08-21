@@ -150,9 +150,10 @@ function runDemo([mandelVS, mandelFS]){
   var frames = [];
   var lastPrintTime = performance.now();
   
-  var loop = function(){
+  var render = function(){
     
-    // Frame rate
+    // Frame rate 
+    /*
     thisFrameTime = performance.now();
     dt = thisFrameTime - lastFrameTime;
     lastFrameTime = thisFrameTime;
@@ -166,12 +167,11 @@ function runDemo([mandelVS, mandelFS]){
       average /= frames.length;
       document.title = (1000 / average).toFixed(1) + ' fps';
     }
-    frames = frames.slice(-60);
+    frames = frames.slice(-60); */
     
     // Clears the canvas
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.clear(gl.DEPTH_BUFFER_BIT);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     
     // Set uniforms
     gl.uniform2fv(uniforms.viewPortDims, viewPortDims);
@@ -182,10 +182,10 @@ function runDemo([mandelVS, mandelFS]){
     
     gl.drawArrays(gl.TRIANGLES, 0, verts.length/2);
     
-    requestAnimationFrame(loop);
+//    requestAnimationFrame(render);
   }
   
-  requestAnimationFrame(loop);
+  requestAnimationFrame(render);
   
   // On window resize event to rescale the canvas
   var resizeCanvas = function(){
@@ -205,23 +205,31 @@ function runDemo([mandelVS, mandelFS]){
     maxR += delta/2;
     
     gl.viewport(0, 0, CANVAS.width, CANVAS.height);
+    requestAnimationFrame(render);
   };
   
   // On mouse wheel event to zoom in on the canvas
   var changeZoom = function(evt){
     //TODO zoom in on the mouse position
-    var imgRange =  maxI - minI;
-    var newRange;
+    var oldRealRange =  maxR - minR;
+    var oldImgRange  =  maxI - minI;
+    var newRealRange;
+    var newImgRange;
     if (evt.deltaY < 0) {
-      newRange = imgRange * 0.95;  // Zoom in
+      newRealRange = oldRealRange * 0.9;  // Zoom in
+      newImgRange  = oldImgRange  * 0.9;  // Zoom in
     } else {  
-      newRange = imgRange / 0.95;  // Zoom out
+      newRealRange = oldRealRange / 0.9;  // Zoom in
+      newImgRange  = oldImgRange  / 0.9;  // Zoom in
     }
-    var delta = newRange - imgRange;
-    minI -= delta/2;
-    maxI += delta/2;
+    var deltaR = newRealRange - oldRealRange;
+    var deltaI = newImgRange  - oldImgRange;
+    minR -= deltaR/2;
+    maxR += deltaR/2;
+    minI -= deltaI/2;
+    maxI += deltaI/2;
     
-    window.onresize();
+    requestAnimationFrame(render);
   }
   
   // On mouse drag, pan accross the canvas
@@ -238,6 +246,7 @@ function runDemo([mandelVS, mandelFS]){
       minI += iDelta;
       maxI += iDelta;
     }
+    requestAnimationFrame(render);
   }
   
   window.onresize = resizeCanvas;
