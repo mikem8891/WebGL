@@ -19,7 +19,7 @@ void main(){
   vec2 z = c;
   float iterations = 0.0;
   float maxIterations = 500.0;
-  const int maxii = maxIterations;
+  const int maxii = 500;
   
   // z(i+1) = z(i)^2 + c
   // i from 0 to 2000
@@ -37,10 +37,12 @@ void main(){
     iterations += 1.0;
   }
   
-  if (iterations < maxIterations){
+  float inten = iterations / maxIterations;
+  
+  if (iterations >= maxIterations){
     discard;
   } else {
-    gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
+    gl_FragColor = vec4(inten, inten, 1.0, 1.0);
   }
 }
  

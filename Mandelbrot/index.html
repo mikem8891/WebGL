@@ -209,6 +209,7 @@ function runDemo([mandelVS, mandelFS]){
   
   // On mouse wheel event to zoom in on the canvas
   var changeZoom = function(evt){
+    //TODO zoom in on the mouse position
     var imgRange =  maxI - minI;
     var newRange;
     if (evt.deltaY < 0) {
@@ -225,9 +226,7 @@ function runDemo([mandelVS, mandelFS]){
   
   // On mouse drag, pan accross the canvas
   var panView = function(evt){
-    console.log("move");
     if (evt.buttons == 1){
-      console.log("click");
       var rRange = maxR - minR;
       var iRange = maxI - minI;
       
