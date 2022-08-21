@@ -211,8 +211,11 @@ function runDemo([mandelVS, mandelFS]){
   // On mouse wheel event to zoom in on the canvas
   var changeZoom = function(evt){
     //TODO zoom in on the mouse position
+    
     var oldRealRange =  maxR - minR;
     var oldImgRange  =  maxI - minI;
+    var x = minR + oldRealRange * (evt.clientX / CANVAS.width);
+    var y = maxI - oldImgRange  * (evt.clientY / CANVAS.height);
     var newRealRange;
     var newImgRange;
     if (evt.deltaY < 0) {
@@ -222,12 +225,12 @@ function runDemo([mandelVS, mandelFS]){
       newRealRange = oldRealRange / 0.9;  // Zoom in
       newImgRange  = oldImgRange  / 0.9;  // Zoom in
     }
-    var deltaR = newRealRange - oldRealRange;
-    var deltaI = newImgRange  - oldImgRange;
-    minR -= deltaR/2;
-    maxR += deltaR/2;
-    minI -= deltaI/2;
-    maxI += deltaI/2;
+    
+    minR = x - newRealRange * (evt.clientX / CANVAS.width);
+    maxI = y + newImgRange  * (evt.clientY / CANVAS.height);
+    
+    maxR = minR + newRealRange;
+    minI = maxI - newImgRange;
     
     requestAnimationFrame(render);
   }
