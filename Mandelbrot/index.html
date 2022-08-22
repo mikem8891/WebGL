@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="HandheldFriendly" content="true" />
+<title>Mandelbrot Explorer</title>
+<style>
+* {
+  margin: 0px;
+  padding: 0px;
+  position: absolute;
+}
+body {
+    overscroll-behavior: contain;
+}
+</style>
+</head>
+<body>
+  <canvas id="renderCanvas">
+    Browser does not support HTML5
+  </canvas>
+
+</body>
+<script>
+"use strict";
+const CANVAS = document.getElementById('renderCanvas');
+var gl;
+
+function main(){
+  loadShaders()
+    .then(runDemo)
+    .catch(function(e){console.error(e)});
+}
+
+async function loadShaders(){
+  
+  var loadText = async function (url) {
+    let responce = await fetch(url);
+    let status = responce.status;
+    if (200 <= status && status < 300){
+      return responce.text();
+    } else {
+      throw 'Failed to load text from: ' + url;
+    }
+  }
+  
+  var vShader = await loadText('mandel.vs.glsl');
+  var fShader = await loadText('mandel.fs.glsl');
+  
+  return [vShader, fShader];
+}
+
+function runDemo([mandelVS, mandelFS]){
+  
+  // console.log([mandelVS, mandelFS]);
+  
+  gl = CANVAS.getContext('webgl');
+  
+  if(!gl){
+    console.log('Attempting to use experimental context.');
+    CANVAS.getContext('experimental-webgl');
+  }
+  
+  if(!gl){
+    console.error('WebGL not supported');
+    return;
+  }
+  
+  // Create Shader Program
+  
+    // Vertex Shader
+  var vs = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(vs, mandelVS);
+  gl.compileShader(vs);
+  if (!gl.getShaderParameter(vs, gl.COMPILE_STATUS)){
+    console.error('ERROR compiling vertex shader!', 
+                  gl.getShaderInfoLog(vs));
+    return;
+  }
+  
+    // Fragment Shader
+  var fs = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(fs, mandelFS);
+  gl.compileShader(fs);
+  if (!gl.getShaderParameter(fs, gl.COMPILE_STATUS)){
+    console.error('ERROR compiling fragment shader!', 
+                  gl.getShaderInfoLog(fs));
+    return;
+  }
+  
+    // Program
+  var program = gl.createProgram();
+  gl.attachShader(program, vs);
+  gl.attachShader(program, fs);
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)){
+    console.error('ERROR linking program', 
+                  gl.getProgramInfoLog(program));
+    return;
+  }
+  gl.validateProgram(program);
+  if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)){
+    console.error('ERROR validating program', 
+                  gl.getProgramInfoLog(program));
+    return;
+  }
+  
+  // Create Buffer
+  
+  gl.useProgram(program);
+  
+  var uniforms = {
+    viewPortDims: gl.getUniformLocation(program, 'viewportDim'),
+            minR: gl.getUniformLocation(program, 'minR'),
+            maxR: gl.getUniformLocation(program, 'maxR'),
+            minI: gl.getUniformLocation(program, 'minI'),
+            maxI: gl.getUniformLocation(program, 'maxI')
+  };
+  
+  var viewPortDims = [CANVAS.width, CANVAS.height];
+  var minR = -2.0;
+  var maxR =  2.0;
+  var minI = -2.0;
+  var maxI =  2.0;
+  
+  var vertexBuffer = gl.createBuffer();
+  var verts = [
+     1.0,  1.0,
+    -1.0,  1.0, // Upper left triangle
+    -1.0, -1.0,
+    
+     1.0,  1.0,
+    -1.0, -1.0, // Bottom right triangle
+     1.0, -1.0
+  ];
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW);
+  
+  var vPosAttribLocation = gl.getAttribLocation(program, 'vPos');
+  gl.vertexAttribPointer(
+    vPosAttribLocation,  // Attribute location 
+    2,                   // Number of elements per attribute (X, Y)
+    gl.FLOAT,            // Data type of the elements
+    gl.FALSE,            // Whether the elements are normalized
+    2 * Float32Array.BYTES_PER_ELEMENT,  // Size of an individual vertex
+    0  // Offset from the beginning of a single vertex to this attribute
+  );
+  gl.enableVertexAttribArray(vPosAttribLocation); // Enables the attribute
+  
+  // Render Loop
+  
+  var thisFrameTime;
+  var lastFrameTime = performance.now();
+  var dt;
+  var frames = [];
+  var lastPrintTime = performance.now();
+  
+  var render = function(){
+    
+    // Frame rate 
+    /*
+    thisFrameTime = performance.now();
+    dt = thisFrameTime - lastFrameTime;
+    lastFrameTime = thisFrameTime;
+    frames.push(dt);
+    if (lastPrintTime + 500.0 < thisFrameTime){
+      lastPrintTime = thisFrameTime;
+      var average = 0;
+      for (let i = 0; i < frames.length; i++){
+        average += frames[i];
+      }
+      average /= frames.length;
+      document.title = (1000 / average).toFixed(1) + ' fps';
+    }
+    frames = frames.slice(-60); */
+    
+    // Clears the canvas
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    
+    // Set uniforms
+    gl.uniform2fv(uniforms.viewPortDims, viewPortDims);
+    gl.uniform1f(uniforms.minR, minR);
+    gl.uniform1f(uniforms.maxR, maxR);
+    gl.uniform1f(uniforms.minI, minI);
+    gl.uniform1f(uniforms.maxI, maxI);
+    
+    gl.drawArrays(gl.TRIANGLES, 0, verts.length/2);
+    
+//    requestAnimationFrame(render);
+  }
+  
+  requestAnimationFrame(render);
+  
+  var lastTouches;
+  
+  // On window resize event to rescale the canvas
+  var resizeCanvas = function(){
+    if (!CANVAS)
+      return;
+    
+    CANVAS.width  = window.innerWidth;
+    CANVAS.height = window.innerHeight;
+    
+    viewPortDims = [CANVAS.width, CANVAS.height];
+    
+    var realRange = maxR - minR;
+    var imgRange  = maxI - minI;
+    var newRealRange  = CANVAS.width * imgRange / CANVAS.height;
+    var delta = newRealRange - realRange;
+    minR -= delta/2;
+    maxR += delta/2;
+    
+    gl.viewport(0, 0, CANVAS.width, CANVAS.height);
+    requestAnimationFrame(render);
+  };
+  
+  // On mouse wheel event to zoom in on the canvas
+  var changeZoom = function(evt){
+    //TODO zoom in on the mouse position
+    
+    var oldRealRange =  maxR - minR;
+    var oldImgRange  =  maxI - minI;
+    var x = minR + oldRealRange * (evt.clientX / CANVAS.width);
+    var y = maxI - oldImgRange  * (evt.clientY / CANVAS.height);
+    var newRealRange;
+    var newImgRange;
+    if (evt.deltaY < 0) {
+      newRealRange = oldRealRange * 0.9;  // Zoom in
+      newImgRange  = oldImgRange  * 0.9;  // Zoom in
+    } else {  
+      newRealRange = oldRealRange / 0.9;  // Zoom in
+      newImgRange  = oldImgRange  / 0.9;  // Zoom in
+    }
+    
+    minR = x - newRealRange * (evt.clientX / CANVAS.width);
+    maxI = y + newImgRange  * (evt.clientY / CANVAS.height);
+    
+    maxR = minR + newRealRange;
+    minI = maxI - newImgRange;
+    
+    requestAnimationFrame(render);
+  }
+  
+  // On mouse drag, pan accross the canvas
+  var panView = function(evt){
+    var shouldPan = false;
+    var dx, dy;
+    if (evt.touches && evt.touches.length == 1){ // pan gesture
+      if (lastTouches.length == 1){
+        shouldPan = true;
+        dx = evt.touches[0].clientX - lastTouches[0].clientX;
+        dy = evt.touches[0].clientY - lastTouches[0].clientY;
+      }
+      lastTouches = evt.touches;
+    } else if (evt.buttons && evt.buttons == 1){ // click and drag to pan
+      shouldPan = true;
+      dx = evt.movementX;
+      dy = evt.movementY;
+    } 
+    if (shouldPan){
+      var rRange = maxR - minR;
+      var iRange = maxI - minI;
+      
+      var rDelta = (dx / CANVAS.width)  * rRange;
+      var iDelta = (dy / CANVAS.height) * iRange;
+      
+      minR -= rDelta;
+      maxR -= rDelta;
+      minI += iDelta;
+      maxI += iDelta;
+    } else if (evt.touches && evt.touches.length == 2){
+      if (lastTouches.length == 2){
+        var oldX0 = lastTouches[0].clientX,
+            oldY0 = lastTouches[0].clientY,
+            oldX1 = lastTouches[1].clientX,
+            oldY1 = lastTouches[1].clientY;
+        var oldXctr = (oldX0 + oldX1)/2,
+            oldYctr = (oldY0 + oldY1)/2;
+        var newX0 = evt.touches[0].clientX,
+            newY0 = evt.touches[0].clientY,
+            newX1 = evt.touches[1].clientX,
+            newY1 = evt.touches[1].clientY;
+        var newXctr = (newX0 + newX1)/2,
+            newYctr = (newY0 + newY1)/2;
+        var oldDist = Math.hypot(oldX1 - oldX0, oldY1 - oldY0);
+        var newDist = Math.hypot(newX1 - newX0, newY1 - newY0);
+        dx = newXctr - oldXctr;
+        dy = newYctr - oldYctr;
+        var rRange = maxR - minR;
+        var iRange = maxI - minI;
+      
+        var rDelta = (dx / CANVAS.width)  * rRange;
+        var iDelta = (dy / CANVAS.height) * iRange;
+      
+        minR -= rDelta;
+        maxR -= rDelta;
+        minI += iDelta;
+        maxI += iDelta;
+        
+        var x = minR + rRange * (newXctr / CANVAS.width);
+        var y = maxI - iRange  * (newYctr / CANVAS.height);
+        
+        rRange *= oldDist/newDist;
+        iRange *= oldDist/newDist;
+        
+        minR = x - rRange * (newXctr / CANVAS.width);
+        maxI = y + iRange * (newYctr / CANVAS.height);
+    
+        maxR = minR + rRange;
+        minI = maxI - iRange;
+      }
+      lastTouches = evt.touches;
+    }
+    
+    requestAnimationFrame(render);
+  }
+  
+  window.onresize = resizeCanvas;
+  window.onwheel  = changeZoom;
+  window.onmousemove = panView;
+  window.ontouchmove = panView;
+  window.ontouchstart = function(evt){
+    lastTouches = evt.touches;
+  }
+  
+  window.onresize();
+}
+
+window.onload = main;
+</script>
+</html>

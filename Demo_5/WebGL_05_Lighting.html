@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>WebGL Demo 4: Loading External Meshes and Shaders</title>
+  <title>WebGL Demo 5: Lighting</title>
   <style>
   body{
     background-color: #111;
@@ -13,7 +13,7 @@
   </style>
 </head>
 <body>
-  <h1>WebGL Demo 4: Loading External Meshes and Shaders</h1>
+  <h1>WebGL Demo 5: Lighting</h1>
   <canvas id="renderCanvas" width="800" height="600">
     Browser does not support HTML5
   </canvas><br>
@@ -26,7 +26,24 @@
 <!-- Initialize WebGl canvas -->
 <script>
 
-function main(){loadAssets();}
+function main(){
+  var canvas = document.getElementById("renderCanvas");
+  
+  var desiredWidthInCSSPixels  = canvas.width;
+  var desiredHeightInCSSPixels = canvas.height;
+
+  // set the display size of the canvas.
+  canvas.style.width = desiredWidthInCSSPixels + "px";
+  canvas.style.height = desiredHeightInCSSPixels + "px";
+
+  // set the size of the drawingBuffer
+  var devicePixelRatio = window.devicePixelRatio || 1;
+  canvas.width  = Math.round(desiredWidthInCSSPixels  * devicePixelRatio);
+  canvas.height = Math.round(desiredHeightInCSSPixels * devicePixelRatio);
+  
+  // load files and run the demo
+  loadAssets();
+}
 
 function loadAssets(){
   var loadImage  = function (url) {
@@ -62,17 +79,17 @@ function loadAssets(){
     loadImage('earth_true_color.jpg'),
     loadText('vshader.glsl'),
     loadText('fshader.glsl'),
-    loadJSON('model.json')])
+    loadJSON('round_icosahedron.json')])
     .then(function ([texture, vertShader, fragShader, model]) {
       runDemo(vertShader, fragShader, model, texture);})
     .catch(function (err) {console.error(err);});
 }
 
-var Model;
+//var Model; // For debugging
 
 function runDemo(vertexShaderText, fragmentShaderText, model, texture){
   console.log('Working');
-  Model = model;
+//  Model = model; // For debugging
   
   const canvas = document.getElementById('renderCanvas');
   var gl = canvas.getContext('webgl');
@@ -147,6 +164,10 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture){
   // Typically this is 'model.meshes[i].vertices' in a JSON model;
   var earthVertices = model.vertices;
   
+  // Specify normals
+  // Typically this is 'model.meshes[i].normals' in a JSON model;
+  var earthNormals = model.normals;
+  
   // Specify the texture coordinates
   // Typically this is 'model.meshes[i].texturecoords[j]' in a JSON model;
   var earthTexCoords = model.texCoordin;
@@ -165,6 +186,10 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture){
   gl.bindBuffer(gl.ARRAY_BUFFER, earthTexCoordBufferObject);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(earthTexCoords), gl.STATIC_DRAW);
   
+  var earthNormBufferObject = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, earthNormBufferObject);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(earthNormals), gl.STATIC_DRAW);
+  
   var earthIndexBufferObject = gl.createBuffer();
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, earthIndexBufferObject);
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(earthIndices), gl.STATIC_DRAW);
@@ -180,6 +205,18 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture){
     0  // Offset from the beginning of a single vertex to this attribute
   );
   gl.enableVertexAttribArray(positionAttribLocation); // Enables the attribute
+  
+  gl.bindBuffer(gl.ARRAY_BUFFER, earthNormBufferObject);
+  var normalAttribLocation = gl.getAttribLocation(program, 'vertNormal'); 
+  gl.vertexAttribPointer(
+    normalAttribLocation,  // Attribute location 
+    3,                     // Number of elements per attribute (X, Y, Z)
+    gl.FLOAT,              // Data type of the elements
+    gl.TRUE,               // Whether the elements are normalized
+    3 * Float32Array.BYTES_PER_ELEMENT,  // Size of an individual vertex
+    0  // Offset from the beginning of a single vertex to this attribute
+  );
+  gl.enableVertexAttribArray(normalAttribLocation); // Enables the attribute
   
   gl.bindBuffer(gl.ARRAY_BUFFER, earthTexCoordBufferObject);
   var texCoordAttribLocation = gl.getAttribLocation(program, 'vertTexCoord'); 
@@ -231,7 +268,17 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture){
   gl.uniformMatrix4fv(matViewUniformLocation,  gl.FALSE, matView)
   gl.uniformMatrix4fv(matProjUniformLocation,  gl.FALSE, matProj)
   
-  // Main render loop for something like a game (just for info)
+  // Lighting information
+  gl.useProgram(program);
+  var ambLightIntUniformLocation = gl.getUniformLocation(program, 'ambLightInt'); 
+  var sunlightIntUniformLocation = gl.getUniformLocation(program, 'sun.color'); 
+  var sunlightDirUniformLocation = gl.getUniformLocation(program, 'sun.direction'); 
+  
+  gl.uniform3f(ambLightIntUniformLocation,  0.1,  0.1,  0.1);
+  gl.uniform3f(sunlightIntUniformLocation,  1.5,  1.5,  1.5);
+  gl.uniform3f(sunlightDirUniformLocation, -3.0,  1.0, -4.0);
+  
+  // Main render loop for something like a game in JS (just for info)
   /*
   var loop = function () {
     updateWorld();

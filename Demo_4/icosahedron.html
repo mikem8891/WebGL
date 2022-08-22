@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Icosahedron JSON</title>
+</head>
+<body>
+
+<h1>Icosahedron JSON</h1>
+
+<textarea id="output">
+  
+  
+</textarea>
+
+</body>
+<script>
+  var output = {};
+  var vertices = [];
+  var normals  = [];
+  var texCoordin = [];
+  
+  var z = 1/Math.sqrt(5);
+  var r = 2*z;
+  
+  
+  // Setting vertices
+  let theta, phi, vert;
+  for (let i=0; i<5; i++){
+    theta = (i*2+1)/5*Math.PI;
+    vert = [0, 1, 0];
+    vertices.push(vert[0], vert[1], vert[2]);
+    normals.push(vert[0], vert[1], vert[2]);
+    texCoordin.push(theta/(2*Math.PI), 0);
+  }
+  phi = Math.acos(z);
+  for (let i=0; i<=5; i++){
+    theta = i*2/5*Math.PI;
+    vert = [r*Math.sin(theta), z, r*Math.cos(theta)];
+    vertices.push(vert[0], vert[1], vert[2]);
+    normals.push(vert[0], vert[1], vert[2]);
+    texCoordin.push(theta/(2*Math.PI), phi/Math.PI);
+  }
+  for (let i=0; i<=5; i++){
+    theta = (i*2+1)/5*Math.PI;
+    vert = [r*Math.sin(theta), -z, r*Math.cos(theta)];
+    vertices.push(vert[0], vert[1], vert[2]);
+    normals.push(vert[0], vert[1], vert[2]);
+    texCoordin.push(theta/(2*Math.PI), 1-phi/Math.PI);
+  }
+  for (let i=0; i<5; i++){
+    theta = (i+1)*2/5*Math.PI;
+    vert = [0, -1, 0];
+    vertices.push(vert[0], vert[1], vert[2]);
+    normals.push(vert[0], vert[1], vert[2]);
+    texCoordin.push(theta/(2*Math.PI), 1);
+  }
+  
+  console.log('# of verts: ' + (vertices.length/3));
+  
+  output['vertices'] = vertices;
+  output['normals'] = normals;
+  output['texCoordin'] = texCoordin;
+  
+  // Setting the indices of the faces
+  var indices = [];
+  for (let i=0; i<5; i++){
+    indices.push(0+i,  5+i,  6+i);
+    indices.push(5+i,  11+i, 6+i);
+    indices.push(6+i,  11+i, 12+i);
+    indices.push(11+i, 17+i, 12+i);
+  }
+  
+  console.log('# of faces: ' + (indices.length/3));
+
+  output['indices'] = indices;
+  
+  document.getElementById('output').value = JSON.stringify(output, null, '  ');
+</script>
+
+</html>
