@@ -18,8 +18,8 @@ void main(){
   
   vec2 z = c;
   float iterations = 0.0;
-  float maxIterations = 500.0;
-  const int maxii = 500;
+  float maxIterations = 2000.0;
+  const int maxii = 2000;
   
   // z(i+1) = z(i)^2 + c
   // i from 0 to 2000
