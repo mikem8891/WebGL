@@ -13,4 +13,4 @@ Demo 5: [Lighting in WebGL](Demo_5/WebGL_05_Lighting.html)
 
 Other Projects
 
-[Mandelbrot Set Explorer](Mandelbrot/) (gpu intensive)
+[Mandelbrot Set Explorer](Mandelbrot/) (GPU intensive)
