@@ -13,14 +13,14 @@ uniform float maxI;
 void main(){
   
   // Transform pixel space to Mandelbrot set space
-  vec2 c = vec2(
+  const vec2 c = vec2(
     gl_FragCoord.x * (maxR - minR) / viewportDim.x + minR,
     gl_FragCoord.y * (maxI - minI) / viewportDim.y + minI
   );
   
   vec2 z = c;
   float iter = 0.0;
-  float maxIters = 2000.0;
+  const float maxIters = 2000.0;
   const int maxii = 2000;
   
   // z(i+1) = z(i)^2 + c
