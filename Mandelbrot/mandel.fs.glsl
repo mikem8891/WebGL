@@ -1,5 +1,7 @@
 // mandelbrot set fragment shader
 
+#define PI 3.1415926535897932384
+
 precision highp float;
 
 uniform vec2 viewportDim;
@@ -17,8 +19,8 @@ void main(){
   );
   
   vec2 z = c;
-  float iterations = 0.0;
-  float maxIterations = 2000.0;
+  float iter = 0.0;
+  float maxIters = 2000.0;
   const int maxii = 2000;
   
   // z(i+1) = z(i)^2 + c
@@ -34,20 +36,14 @@ void main(){
       break;
     }
     
-    iterations += 1.0;
+    iter += 1.0;
   }
   
-  vec3 setComColor = vec3(0.0, 0.0, 1.0);
-  
-  if (iterations >= maxIterations){
+  if (iter >= maxIters){
     discard;
   } else {
-    setComColor = vec3(
-      max(min(4.0*(iterations - maxIterations/4.0)/maxIterations, -2.0*((iterations-maxIterations)/maxIterations)), 0.0),
-      max(min(4.0*iterations/maxIterations, 1.0 - 4.0*((iterations-maxIterations/4.0)/maxIterations)), 0.0), 
-      max(max(1.0 - 4.0*iterations/(maxIterations), 2.0*(iterations - maxIterations/2.0)), 0.0)
-    );
-    gl_FragColor = vec4(setComColor, 1.0);
+    float fi = 1.25*PI*log(1 + iter)/log(1 + maxIter);
+    gl_FragColor = vec4(cos(fi - PI), cos(fi - 0.5*PI), max(cos(fi), cos(fi - 1.5*PI)), 1.0);
   }
 }
  
