@@ -11,7 +11,10 @@
   position: absolute;
 }
 body {
-    overscroll-behavior: contain;
+  overscroll-behavior: contain;
+}
+canvas{
+  touch-action: none;
 }
 </style>
 </head>
@@ -244,6 +247,8 @@ function runDemo([mandelVS, mandelFS]){
   
   // On mouse drag, pan accross the canvas
   var panView = function(evt){
+    event.preventDefault();
+    event.stopPropagation();
     var shouldPan = false;
     var dx, dy;
     if (evt.touches && evt.touches.length == 1){ // pan gesture
@@ -321,6 +326,8 @@ function runDemo([mandelVS, mandelFS]){
   window.onmousemove = panView;
   window.ontouchmove = panView;
   window.ontouchstart = function(evt){
+    event.preventDefault();
+    event.stopPropagation();
     lastTouches = evt.touches;
   }
   
