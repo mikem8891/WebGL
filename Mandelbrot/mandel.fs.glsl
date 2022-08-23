@@ -13,7 +13,7 @@ uniform float maxI;
 void main(){
   
   // Transform pixel space to Mandelbrot set space
-  const vec2 c = vec2(
+  vec2 c = vec2(
     gl_FragCoord.x * (maxR - minR) / viewportDim.x + minR,
     gl_FragCoord.y * (maxI - minI) / viewportDim.y + minI
   );
@@ -42,8 +42,11 @@ void main(){
   if (iter >= maxIters){
     discard;
   } else {
-    float fi = 1.25*PI*log(1 + iter)/log(1 + maxIter);
-    gl_FragColor = vec4(cos(fi - PI), cos(fi - 0.5*PI), max(cos(fi), cos(fi - 1.5*PI)), 1.0);
+    float fi = 1.25*PI*sqrt(iter)/sqrt(maxIters);
+//    float fi = 1.25*PI*log(1.0 + iter)/log(1.0 + maxIters);
+    gl_FragColor = vec4(
+      cos(fi - PI), cos(fi - 0.5*PI), 
+      max(cos(fi), cos(fi - 1.5*PI)), 1.0);
   }
 }
  
