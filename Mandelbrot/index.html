@@ -14,6 +14,8 @@ body {
   overscroll-behavior: contain;
 }
 canvas{
+  width:  100vw;
+  height: 100vh;
   touch-action: none;
 }
 </style>
@@ -202,14 +204,17 @@ function runDemo([mandelVS, mandelFS]){
     if (!CANVAS)
       return;
     
-    CANVAS.width  = window.innerWidth;
-    CANVAS.height = window.innerHeight;
+    var canvasBox = CANVAS.getBoundingClientRect();
+    var DPR = window.devicePixelRatio || 1;
+    
+    CANVAS.width  = Math.round(canvasBox.width  * DPR);
+    CANVAS.height = Math.round(canvasBox.height * DPR);
     
     viewPortDims = [CANVAS.width, CANVAS.height];
     
     var realRange = maxR - minR;
     var imgRange  = maxI - minI;
-    var newRealRange  = CANVAS.width * imgRange / CANVAS.height;
+    var newRealRange  = CANVAS.clientWidth * imgRange / CANVAS.clientHeight;
     var delta = newRealRange - realRange;
     minR -= delta/2;
     maxR += delta/2;
@@ -224,8 +229,8 @@ function runDemo([mandelVS, mandelFS]){
     
     var oldRealRange =  maxR - minR;
     var oldImgRange  =  maxI - minI;
-    var x = minR + oldRealRange * (evt.clientX / CANVAS.width);
-    var y = maxI - oldImgRange  * (evt.clientY / CANVAS.height);
+    var x = minR + oldRealRange * (evt.clientX / CANVAS.clientWidth);
+    var y = maxI - oldImgRange  * (evt.clientY / CANVAS.clientHeight);
     var newRealRange;
     var newImgRange;
     if (evt.deltaY < 0) {
@@ -236,8 +241,8 @@ function runDemo([mandelVS, mandelFS]){
       newImgRange  = oldImgRange  / 0.9;  // Zoom in
     }
     
-    minR = x - newRealRange * (evt.clientX / CANVAS.width);
-    maxI = y + newImgRange  * (evt.clientY / CANVAS.height);
+    minR = x - newRealRange * (evt.clientX / CANVAS.clientWidth);
+    maxI = y + newImgRange  * (evt.clientY / CANVAS.clientHeight);
     
     maxR = minR + newRealRange;
     minI = maxI - newImgRange;
@@ -267,8 +272,8 @@ function runDemo([mandelVS, mandelFS]){
       var rRange = maxR - minR;
       var iRange = maxI - minI;
       
-      var rDelta = (dx / CANVAS.width)  * rRange;
-      var iDelta = (dy / CANVAS.height) * iRange;
+      var rDelta = (dx / CANVAS.clientWidth)  * rRange;
+      var iDelta = (dy / CANVAS.clientHeight) * iRange;
       
       minR -= rDelta;
       maxR -= rDelta;
@@ -295,22 +300,22 @@ function runDemo([mandelVS, mandelFS]){
         var rRange = maxR - minR;
         var iRange = maxI - minI;
       
-        var rDelta = (dx / CANVAS.width)  * rRange;
-        var iDelta = (dy / CANVAS.height) * iRange;
+        var rDelta = (dx / CANVAS.clientWidth)  * rRange;
+        var iDelta = (dy / CANVAS.clientHeight) * iRange;
       
         minR -= rDelta;
         maxR -= rDelta;
         minI += iDelta;
         maxI += iDelta;
         
-        var x = minR + rRange * (newXctr / CANVAS.width);
-        var y = maxI - iRange  * (newYctr / CANVAS.height);
+        var x = minR + rRange * (newXctr / CANVAS.clientWidth);
+        var y = maxI - iRange  * (newYctr / CANVAS.clientHeight);
         
         rRange *= oldDist/newDist;
         iRange *= oldDist/newDist;
         
-        minR = x - rRange * (newXctr / CANVAS.width);
-        maxI = y + iRange * (newYctr / CANVAS.height);
+        minR = x - rRange * (newXctr / CANVAS.clientWidth);
+        maxI = y + iRange * (newYctr / CANVAS.clientHeight);
     
         maxR = minR + rRange;
         minI = maxI - iRange;
