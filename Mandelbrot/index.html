@@ -195,17 +195,19 @@ function runDemo([mandelVS, mandelFS]){
 //    requestAnimationFrame(render);
   }
   
-  requestAnimationFrame(render);
+//  requestAnimationFrame(render);
   
   var lastTouches;
   
   // On window resize event to rescale the canvas
+  
+  var DPR = window.devicePixelRatio || 1;
+  
   var resizeCanvas = function(){
     if (!CANVAS)
       return;
     
     var canvasBox = CANVAS.getBoundingClientRect();
-    var DPR = window.devicePixelRatio || 1;
     
     CANVAS.width  = Math.round(canvasBox.width  * DPR);
     CANVAS.height = Math.round(canvasBox.height * DPR);
@@ -247,7 +249,8 @@ function runDemo([mandelVS, mandelFS]){
     maxR = minR + newRealRange;
     minI = maxI - newImgRange;
     
-    requestAnimationFrame(render);
+    DRP = 1;
+    window.onresize();
   }
   
   // On mouse drag, pan accross the canvas
@@ -322,8 +325,8 @@ function runDemo([mandelVS, mandelFS]){
       }
       lastTouches = evt.touches;
     }
-    
-    requestAnimationFrame(render);
+    DPR = 1;
+    window.onresize();
   }
   
   window.onresize = resizeCanvas;
@@ -334,6 +337,10 @@ function runDemo([mandelVS, mandelFS]){
     event.preventDefault();
     event.stopPropagation();
     lastTouches = evt.touches;
+  };
+  window.ontouchend = function(){
+    DPR = window.devicePixelRatio || 1;
+    window.onresize();
   }
   
   window.onresize();
