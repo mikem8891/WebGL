@@ -249,7 +249,7 @@ function runDemo([mandelVS, mandelFS]){
     maxR = minR + newRealRange;
     minI = maxI - newImgRange;
     
-    DRP = 1;
+    DPR = window.devicePixelRatio || 1;
     window.onresize();
   }
   
@@ -282,6 +282,8 @@ function runDemo([mandelVS, mandelFS]){
       maxR -= rDelta;
       minI += iDelta;
       maxI += iDelta;
+      DPR = 1;
+      window.onresize();
     } else if (evt.touches && evt.touches.length == 2){
       if (lastTouches.length == 2){
         var oldX0 = lastTouches[0].clientX,
@@ -322,16 +324,20 @@ function runDemo([mandelVS, mandelFS]){
     
         maxR = minR + rRange;
         minI = maxI - iRange;
+        DPR = 1;
+        window.onresize();
       }
       lastTouches = evt.touches;
     }
-    DPR = 1;
-    window.onresize();
   }
   
   window.onresize = resizeCanvas;
   window.onwheel  = changeZoom;
   window.onmousemove = panView;
+  window.onmouseup = function(){
+    DPR = window.devicePixelRatio || 1;
+    window.onresize();
+  }
   window.ontouchmove = panView;
   window.ontouchstart = function(evt){
     event.preventDefault();
