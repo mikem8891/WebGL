@@ -282,9 +282,9 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture){
   var sunlightIntUniformLocation = gl.getUniformLocation(program, 'sun.color'); 
   var sunlightDirUniformLocation = gl.getUniformLocation(program, 'sun.direction'); 
   
-  gl.uniform3f(ambLightIntUniformLocation,  0.1,  0.1,  0.1);
-  gl.uniform3f(sunlightIntUniformLocation,  1.5,  1.5,  1.5);
-  gl.uniform3f(sunlightDirUniformLocation, -3.0,  1.0, -4.0);
+  gl.uniform3f(ambLightIntUniformLocation,  0.01,  0.01,  0.01);
+  gl.uniform3f(sunlightIntUniformLocation,   1.0,   1.0,   1.0);
+  gl.uniform3f(sunlightDirUniformLocation,  -4.0,   0.0,  -3.0);
   
   // Main render loop for something like a game in JS (just for info)
   /*
