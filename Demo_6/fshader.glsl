@@ -21,10 +21,9 @@ void main(){
   
   vec4 texel = texture2D(sampler, fragTexCoord);
   
-  vec3 lightInt = ambLightInt + 
-    sun.color * max(dot(normSunDir, surfaceNorm), 0.0);
+  vec3 lightInt = ambLightInt +  // ambient light
+    sun.color * max(dot(normSunDir, surfaceNorm), 0.0); // diffuse light
   
-  vec4 linearColor = texel * vec4(lightInt, 1.0);
-  gl_FragColor = sqrt(linearColor);  // pseudo gamma correction
+  gl_FragColor = texel * vec4(sqrt(lightInt), 1.0); // sqrt for pseudo gamma correction
 //  gl_FragColor = vec4(surfaceNorm, 1.0); // display normals for debugging
 }
