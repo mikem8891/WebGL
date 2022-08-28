@@ -65,7 +65,7 @@ function loadAssets(){
     loadJSON('model.json')])
     .then(function ([texture, vertShader, fragShader, model]) {
       runDemo(vertShader, fragShader, model, texture);})
-    .catch(function (err) {console.error(err);});
+    .catch(function (err) {alert(err);});
 }
 
 var Model;
