@@ -68,7 +68,7 @@ function main(){
     gl = canvas.getContext('experimental-webgl');
   }
   if(!gl){
-    console.log('WebGL not supported');
+    alert('WebGL not supported');
     return;
   }
   
@@ -105,12 +105,12 @@ function main(){
   
   // Check for compilation errors
   if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)){
-    console.error('ERROR compiling vertex shader!', 
+    alert('ERROR compiling vertex shader!', 
                   gl.getShaderInfoLog(vertexShader));
     return;
   }
   if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)){
-    console.error('ERROR compiling fragment shader!', 
+    alert('ERROR compiling fragment shader!', 
                   gl.getShaderInfoLog(fragmentShader));
     return;
   }
@@ -123,13 +123,13 @@ function main(){
   
   // Check for errors
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)){
-    console.error('ERROR linking program', 
+    alert('ERROR linking program', 
                   gl.getProgramInfoLog(program));
     return;
   }
   gl.validateProgram(program);
   if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)){
-    console.error('ERROR validating program', 
+    alert('ERROR validating program', 
                   gl.getProgramInfoLog(program));
     return;
   }
