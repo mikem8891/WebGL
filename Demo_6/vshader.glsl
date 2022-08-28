@@ -18,4 +18,5 @@ void main(){
   gl_Position  = mProj * mView * mWorld * vec4(vertPosition, 1.0);
   fragNormal   = (mWorld * vec4(vertNormal, 0.0)).xyz;
   fragTexCoord = vertTexCoord;
+  fragPosition = vertPosition;
 }

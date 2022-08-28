@@ -262,20 +262,23 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture){
   gl.useProgram(program);
 
   //Set uniforms (shader constants)
+  var viewPositionLocation = gl.getUniformLocation(program, 'viewPos');
   var matWorldUniformLocation = gl.getUniformLocation(program, 'mWorld'); 
   var matViewUniformLocation  = gl.getUniformLocation(program, 'mView'); 
-  var matProjUniformLocation  = gl.getUniformLocation(program, 'mProj'); 
+  var matProjUniformLocation  = gl.getUniformLocation(program, 'mProj');
   
+  var viewPosition = [0, 0, -5];
   var matWorld = new Float32Array(16);
   var matView  = new Float32Array(16);
   var matProj  = new Float32Array(16);
   glMatrix.mat4.identity(matWorld);
-  glMatrix.mat4.lookAt(matView, [0, 0, -5], [0, 0, 0], [0, 1, 0]);
+  glMatrix.mat4.lookAt(matView, viewPosition, [0, 0, 0], [0, 1, 0]);
   glMatrix.mat4.perspective(matProj, glMatrix.glMatrix.toRadian(30), canvas.width / canvas.height, 0.1, 1000);
   
-  gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, matWorld)
-  gl.uniformMatrix4fv(matViewUniformLocation,  gl.FALSE, matView)
-  gl.uniformMatrix4fv(matProjUniformLocation,  gl.FALSE, matProj)
+  gl.uniform3fv(viewPositionLocation, new Float32Array(viewPosition));
+  gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, matWorld);
+  gl.uniformMatrix4fv(matViewUniformLocation,  gl.FALSE, matView);
+  gl.uniformMatrix4fv(matProjUniformLocation,  gl.FALSE, matProj);
   
   // Lighting information
   gl.useProgram(program);
