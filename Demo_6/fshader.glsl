@@ -22,11 +22,6 @@ void main(){
   vec3 surfaceNorm  = normalize(fragNormal);
   vec3 reflectedRay = reflect(-normSunDir, surfaceNorm);
   
-  if (dot(viewPos - fragPosition, surfaceNorm) <= 0.0){
-    discard;
-    return;
-  }
-  
   vec4 texelRGB = texture2D(sampler, fragTexCoord);
   vec4 texelLin = texelRGB * texelRGB;
   
