@@ -88,15 +88,16 @@ function loadAssets(){
     loadImage('earth_true_color.jpg'),
     loadText('vshader.glsl'),
     loadText('fshader.glsl'),
-    loadJSON('round_icosahedron.json')])
-    .then(function ([texture, vertShader, fragShader, model]) {
-      runDemo(vertShader, fragShader, model, texture);})
-    .catch(function (err) {alert(err);});
+    loadJSON('round_icosahedron.json'),
+    loadImage('earth_specular.png')])
+    .then(function ([texture, vertShader, fragShader, model, specMap]) {
+      runDemo(vertShader, fragShader, model, texture, specMap);})
+    .catch(function (err) {console.error(err);});
 }
 
 //var Model; // For debugging
 
-function runDemo(vertexShaderText, fragmentShaderText, model, texture){
+function runDemo(vertexShaderText, fragmentShaderText, model, texture, specMap){
   console.log('Working');
 //  Model = model; // For debugging
   
@@ -254,13 +255,38 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture){
     gl.UNSIGNED_BYTE, // type (8 bits per channel for gl.RGBA)
     texture  // pixels (HTMLImageElement)
   );
-  gl.activeTexture(gl.TEXTURE0);
-  //gl.bindTexture(gl.TEXTURE_2D, null);
-    
+  var earthSpec = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, earthSpec);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+  gl.texImage2D(
+    gl.TEXTURE_2D, // target (a 2D texture)
+    0,             // level (level 0 is the base image)
+    gl.LUMINANCE,       // internal format 
+    gl.LUMINANCE,       // format (in WebGL this needs to match the internal format)
+    gl.UNSIGNED_BYTE, // type (8 bits)
+    specMap  // pixels (HTMLImageElement)
+  );
+
   // Tells WebGL what program to use
   gl.useProgram(program);
 
-  //Set uniforms (shader constants)
+  // Set uniforms (shader constants)
+  // Textures
+  var earthTextLoc = gl.getUniformLocation(program, "samplerText");
+  var earthSpecLoc = gl.getUniformLocation(program, "samplerSpec");
+  gl.uniform1i(earthTextLoc, 0);
+  gl.uniform1i(earthSpecLoc, 1);
+
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, earthTexture);
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D, earthSpec);
+
+  // Matrices
   var viewPositionLocation = gl.getUniformLocation(program, 'viewPos');
   var matWorldUniformLocation = gl.getUniformLocation(program, 'mWorld'); 
   var matViewUniformLocation  = gl.getUniformLocation(program, 'mView'); 
