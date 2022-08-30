@@ -145,8 +145,10 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture){
     return;
   }
   if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)){
-    alert('ERROR compiling fragment shader!', 
-                  gl.getShaderInfoLog(fragmentShader));
+    alert('ERROR compiling fragment shader!');
+    alert(gl.getShaderInfoLog(fragmentShader));
+    console.error('ERROR compiling fragment shader!', 
+                  gl.getShaderInfoLog(fragmentShader))
     return;
   }
   
