@@ -145,10 +145,7 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture){
     return;
   }
   if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)){
-    alert('ERROR compiling fragment shader!');
-    alert(gl.getShaderInfoLog(fragmentShader));
-    console.error('ERROR compiling fragment shader!', 
-                  gl.getShaderInfoLog(fragmentShader))
+    alert('ERROR compiling fragment shader!\n' + gl.getShaderInfoLog(fragmentShader));
     return;
   }
   
@@ -160,7 +157,7 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture){
   
   // Check for errors
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)){
-    alert('ERROR linking program', 
+    alert('ERROR linking program\n' + 
                   gl.getProgramInfoLog(program));
     return;
   }
