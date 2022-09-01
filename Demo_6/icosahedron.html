@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Icosahedron JSON</title>
+</head>
+<body>
+
+<h1>Icosahedron JSON</h1>
+
+<textarea id="output">
+  
+  
+</textarea>
+
+</body>
+<script>
+  var output = {};
+  var icosaVertices = [];
+  var normals  = [];
+  var texCoordin = [];
+  
+  var z = 1/Math.sqrt(5);
+  var r = 2*z;
+  
+  
+  // Setting vertices
+  let theta, phi, vert;
+  for (let i=0; i<5; i++){
+    theta = (i*2+1)/5*Math.PI;
+    vert = [0, 1, 0];
+    icosaVertices.push(vert[0], vert[1], vert[2]);
+    normals.push(vert[0], vert[1], vert[2]);
+    texCoordin.push(theta/(2*Math.PI), 0);
+  }
+  phi = Math.acos(z);
+  for (let i=0; i<=5; i++){
+    theta = i*2/5*Math.PI;
+    vert = [r*Math.sin(theta), z, r*Math.cos(theta)];
+    icosaVertices.push(vert[0], vert[1], vert[2]);
+    normals.push(vert[0], vert[1], vert[2]);
+    texCoordin.push(theta/(2*Math.PI), phi/Math.PI);
+  }
+  for (let i=0; i<=5; i++){
+    theta = (i*2+1)/5*Math.PI;
+    vert = [r*Math.sin(theta), -z, r*Math.cos(theta)];
+    icosaVertices.push(vert[0], vert[1], vert[2]);
+    normals.push(vert[0], vert[1], vert[2]);
+    texCoordin.push(theta/(2*Math.PI), 1-phi/Math.PI);
+  }
+  for (let i=0; i<5; i++){
+    theta = (i+1)*2/5*Math.PI;
+    vert = [0, -1, 0];
+    icosaVertices.push(vert[0], vert[1], vert[2]);
+    normals.push(vert[0], vert[1], vert[2]);
+    texCoordin.push(theta/(2*Math.PI), 1);
+  }
+  
+  // Setting the indices of the faces
+  var indices = [];
+  for (let i=0; i<5; i++){
+    indices.push(0+i,  5+i,  6+i);
+    indices.push(5+i,  11+i, 6+i);
+    indices.push(6+i,  11+i, 12+i);
+    indices.push(11+i, 17+i, 12+i);
+  }
+  
+  var roundVerts = [];
+  var roundTexCoodin = [];
+  var roundIndices = [];
+  for(let i=0; i<indices.length; i+=3){ //face indices
+    var oldIndLen  = roundIndices.length;
+    var oldVertLen = roundVerts.length;
+    var oldTextLen = roundTexCoodin.length;
+    var vert00 = icosaVertices.slice(3*indices[i],     3*indices[i]     + 3);
+    var vert02 = icosaVertices.slice(3*indices[i + 1], 3*indices[i + 1] + 3);
+    var vert20 = icosaVertices.slice(3*indices[i + 2], 3*indices[i + 2] + 3);
+    var triangle = divideTriangle(vert00, vert02, vert20);
+    if (i==0){
+      document.getElementById('output').value = JSON.stringify(triangle, null, '  ');
+      console.log(indices[i], indices[i+1], indices[i+2]);
+      console.log(vert00, vert02, vert20);
+      console.log(icosaVertices);
+    }
+    roundVerts     = roundVerts.concat(triangle.vertices);
+    roundTexCoodin = roundTexCoodin.concat(triangle.texCoordin);
+
+    for(let j=0; j<triangle.indices.length; j++){
+      roundIndices[oldIndLen + j] = triangle.indices[j] + oldVertLen/3;
+    }
+    for(let j=0; j<3; j++){ // fixes the theta for texture coordinates at the top
+      if(indices[i+j] < 5 || indices[i+j] >= 17){
+        roundTexCoodin[oldTextLen + 2*j] = texCoordin[2*indices[i+j]];
+      }
+    }
+  }
+
+  output['vertices'] = roundVerts;
+  output['normals'] = roundVerts;
+  output['texCoordin'] = roundTexCoodin;
+  output['indices'] = roundIndices;
+  
+  document.getElementById('output').value = JSON.stringify(output, null, '  ');
+  
+  function divideTriangle(vert00, vert02, vert20){
+    var output = {};
+    var len;
+    
+    var vert01 = new Array(3);
+    vert01[0] = vert00[0] + vert02[0];
+    vert01[1] = vert00[1] + vert02[1];
+    vert01[2] = vert00[2] + vert02[2];
+    len  = vert01[0] * vert01[0];
+    len += vert01[1] * vert01[1];
+    len += vert01[2] * vert01[2];
+    len = Math.sqrt(len);
+    vert01[0] /= len;
+    vert01[1] /= len;
+    vert01[2] /= len;
+
+    var vert10 = new Array(3);
+    vert10[0] = vert00[0] + vert20[0];
+    vert10[1] = vert00[1] + vert20[1];
+    vert10[2] = vert00[2] + vert20[2];
+    len  = vert10[0] * vert10[0];
+    len += vert10[1] * vert10[1];
+    len += vert10[2] * vert10[2];
+    len = Math.sqrt(len);
+    vert10[0] /= len;
+    vert10[1] /= len;
+    vert10[2] /= len;
+
+    var vert11 = new Array(3);
+    vert11[0] = vert02[0] + vert20[0];
+    vert11[1] = vert02[1] + vert20[1];
+    vert11[2] = vert02[2] + vert20[2];
+    len  = vert11[0] * vert11[0];
+    len += vert11[1] * vert11[1];
+    len += vert11[2] * vert11[2];
+    len = Math.sqrt(len);
+    vert11[0] /= len;
+    vert11[1] /= len;
+    vert11[2] /= len;
+
+    verts = vert00.concat(vert02, vert20, vert01, vert10, vert11);
+    var faces = 
+    [
+      0, 3, 4,
+      3, 1, 5,
+      3, 5, 4,
+      4, 5, 2
+    ];
+
+    var texCoordin = [];
+    for(let i=0; i<verts.length; i+=3){
+      var phi = Math.acos(verts[i+1]);
+      var theta = Math.atan2(verts[i+2], -verts[i]);
+      texCoordin.push(theta/(2*Math.PI), phi/Math.PI);
+    }
+
+    output['vertices'] = verts;
+    output['normals']  = verts;
+    output['indices']    = faces;
+    output['texCoordin'] = texCoordin;
+
+    //console.log(output);
+
+    return output;
+  }
+
+</script>
+
+</html>
