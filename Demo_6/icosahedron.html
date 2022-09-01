@@ -31,7 +31,7 @@
       theta = i*2/5*Math.PI;
       icosaCoordins.push(theta, phi);
     }
-    phi = phi - Math.PI;
+    phi = Math.PI - phi;
     for (let i=0; i<=5; i++){
       theta = (i*2+1)/5*Math.PI;
       icosaCoordins.push(theta, phi);
@@ -89,7 +89,6 @@
   }
   
   function divideTriangle(theta0, phi0, theta1, phi1, theta2, phi2){
-    console.log(theta0, phi0, theta1, phi1, theta2, phi2);
     let x0 = Math.sin(phi0) * Math.sin(theta0);
     let y0 = Math.cos(phi0);
     let z0 = Math.sin(phi0) * Math.cos(theta0);
@@ -129,14 +128,37 @@
     }else{
       theta5 = theta2 + Math.atan2(z2*x5 - x2*z5, z2*z5 + x2*x5);
     }
-    let phi5 = Math.atan2(Math.sqrt(x3*x3 + z3*z3), y3);
+    let phi5 = Math.atan2(Math.sqrt(x5*x5 + z5*z5), y5);
 
-    console.log(theta3, phi3, theta4, phi4, theta5, phi5);
+    console.table([
+      [theta0, phi0], [theta1, phi1], [theta2, phi2],
+      [theta3, phi3], [theta4, phi4], [theta5, phi5]
+    ]);
 
     return [
       theta0, phi0, theta1, phi1, theta2, phi2,
       theta3, phi3, theta4, phi4, theta5, phi5
     ];
+  }
+
+  function dividePolyhedron(poly){
+    var oldCoordins = poly.indices;
+    var oldIndices  = poly.coordins;
+    var newCoordins = [];
+    var newIndices  = [];
+    var facesTotal = indices.length/3;
+    for (let i=0; i<facesTotal; i++){
+      let tri = divideTriangle(icosaCoordins[2*indices[3*i    ]], icosaCoordins[2*indices[3*i    ] + 1],
+                               icosaCoordins[2*indices[3*i + 1]], icosaCoordins[2*indices[3*i + 1] + 1],
+                               icosaCoordins[2*indices[3*i + 2]], icosaCoordins[2*indices[3*i + 2] + 1]);
+      let len = sphereCoordins.length/2;
+      sphereCoordins = sphereCoordins.concat(tri);
+      sphereIndices.push(len + 0, len + 3, len + 5,
+                         len + 3, len + 1, len + 4,
+                         len + 3, len + 4, len + 5,
+                         len + 5, len + 4, len + 2);
+    }
+    return {'coordins': newCoordins, 'indices': newIndices};;
   }
 
   function coordinIndex(coordins, theta, phi){
@@ -185,8 +207,8 @@
     var textureCoordins = [];
     let len = coodins.length/2;
     for (let i=0; i<len; i++){
-      let theta = coodins[i];
-      let phi   = coodins[i + 1];
+      let theta = coodins[2*i];
+      let phi   = coodins[2*i + 1];
       let s = theta / (2 * Math.PI);
       let t = phi / Math.PI;
       textureCoordins.push(s, t);

@@ -287,7 +287,7 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture, specMap){
   gl.bindTexture(gl.TEXTURE_2D, earthSpec);
 
   // Matrices
-  var viewPositionLocation = gl.getUniformLocation(program, 'viewPos');
+  var viewPositionLocation    = gl.getUniformLocation(program, 'viewPos');
   var matWorldUniformLocation = gl.getUniformLocation(program, 'mWorld'); 
   var matViewUniformLocation  = gl.getUniformLocation(program, 'mView'); 
   var matProjUniformLocation  = gl.getUniformLocation(program, 'mProj');
