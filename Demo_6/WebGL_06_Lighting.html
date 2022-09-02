@@ -102,15 +102,34 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture, specMap){
 //  Model = model; // For debugging
   
   const canvas = document.getElementById('renderCanvas');
-  var gl = canvas.getContext('webgl');
-  
+  var context = 'webgl2';
+  var gl = canvas.getContext(context);
+
   if(!gl){
-    console.log('Attempting to use experimental context.');
-    canvas.getContext('experimental-webgl');
+    context = 'webgl';
+    console.log('Attempting to use "' + context + '" context.');
+    gl = canvas.getContext(context);
   }
   
-  if(!gl)
+  if(!gl){
+    context = 'experimental-webgl';
+    console.log('Attempting to use "' + context + '" context.');
+    gl = canvas.getContext(context);
+  }
+  
+  var internalFormat;
+  if(!gl){
+    console.error('WebGL not supported');
     alert('WebGL not supported');
+    return;
+  } else if (context == 'webgl2'){
+    fragmentShaderText = '#define Convert_sRGB_to_Lin 0 \n' + fragmentShaderText;
+    internalFormat = gl.SRGB8_ALPHA8;
+  } else {
+    fragmentShaderText = '#define Convert_sRGB_to_Lin 1 \n' + fragmentShaderText;
+    internalFormat = gl.RGBA;
+  }
+
   
   // Clears the canvas
   gl.clearColor(0.05, 0.05, 0.05, 1.00);
@@ -245,22 +264,24 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture, specMap){
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST)
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
   gl.texImage2D(
     gl.TEXTURE_2D, // target (a 2D texture)
     0,             // level (level 0 is the base image)
-    gl.RGBA,       // internal format 
+    internalFormat,       // internal format 
     gl.RGBA,       // format (in WebGL this needs to match the internal format)
-    gl.UNSIGNED_BYTE, // type (8 bits per channel for gl.RGBA)
+    gl.UNSIGNED_BYTE, // type (8 bits per channel for gl.SRGB)
     texture  // pixels (HTMLImageElement)
   );
+  gl.generateMipmap(gl.TEXTURE_2D);
+  
   var earthSpec = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, earthSpec);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST)
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
   gl.texImage2D(
     gl.TEXTURE_2D, // target (a 2D texture)
@@ -270,6 +291,7 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture, specMap){
     gl.UNSIGNED_BYTE, // type (8 bits)
     specMap  // pixels (HTMLImageElement)
   );
+  gl.generateMipmap(gl.TEXTURE_2D);
 
   // Tells WebGL what program to use
   gl.useProgram(program);

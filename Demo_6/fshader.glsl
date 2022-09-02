@@ -1,5 +1,7 @@
 // fragment shader
 
+#define GAMMA 2.2
+
 precision mediump float;
 
 struct DirectionalLight{
@@ -23,8 +25,10 @@ void main(){
   vec3 surfaceNorm  = normalize(fragNormal);
   vec3 reflectedRay = reflect(-normSunDir, surfaceNorm);
   
-  vec4 texelRGB = texture2D(samplerText, fragTexCoord);
-  vec4 texelLin = pow(texelRGB, vec4(2.2));
+  vec4 texel = texture2D(samplerText, fragTexCoord);
+  #if Convert_sRGB_to_Lin
+  texel = texel * texel;
+  #endif
 
   vec4 texelSpec = texture2D(samplerSpec, fragTexCoord);
   
@@ -32,7 +36,7 @@ void main(){
     sun.color * max(dot(normSunDir, surfaceNorm), 0.0); // diffuse light
   vec3 specInt =  texelSpec.rgb * sun.color * pow(max(dot(normalize(viewPos - fragPosition), reflectedRay), 0.0), 256.0); // specular light
   
-  vec4 colorLin = texelLin * vec4(lightInt, 1.0) + vec4(specInt, 1.0); 
-  gl_FragColor = pow(colorLin, vec4(1.0/2.2)); // sqrt for pseudo gamma correction
+  vec4 colorLin = texel * vec4(lightInt, 1.0) + vec4(specInt, 1.0); 
+  gl_FragColor = pow(colorLin, vec4(1.0/GAMMA)); // pseudo gamma correction
 //  gl_FragColor = vec4(surfaceNorm, 1.0); // display normals for debugging
 }
