@@ -19,7 +19,7 @@
       }
 
       input[type="number"]{
-        width : 8ch;
+        width : 9ch;
       }
 
       .flex {
@@ -34,10 +34,12 @@
 <body>
   <div>
     <h1>Convert a Bump Map to a Normal Map for a Sphere</h1>
-    <label for="outputWidth" >output width:  </label><input type="number" id="outputWidth"  name="outputWidth"  value="100" min="1" onchange="convertBumpMapToNormalMap()"/>
-    <label for="outputHeight">output height: </label><input type="number" id="outputHeight" name="outputHeight" value="100" min="1" onchange="convertBumpMapToNormalMap()"/>
+    <label for="outputWidth" >output width:  </label><input type="number" id="outputWidth"  name="outputWidth"  value="2048" min="1" onchange="convertBumpMapToNormalMap()"/>
+    <label for="outputHeight">output height: </label><input type="number" id="outputHeight" name="outputHeight" value="1024" min="1" onchange="convertBumpMapToNormalMap()"/>
+    <label for="bumpRange">bump range:       </label><input type="number" id="bumpRange"    name="bumpRange"    value="0.00139" min="0" max="1" step=".00001" onchange="convertBumpMapToNormalMap()"/>
     <label for="myFile">Choose a bump map to upload</label>
     <input type="file" id="myFile" name="myFile" accept="image/*" />
+    <span id="maxDims"></span>
     <a download hidden>Download Normal Map</a>
   </div>
   <div class="flex">
@@ -73,12 +75,28 @@
   precision highp float;
 
   uniform sampler2D samplerText;
+  uniform float width;
+  uniform float height;
+  uniform float bumpRange;
 
   varying vec2 fragTexCoord;
 
   void main(){
+    const float PI = 3.1415926535;
+    float theta = 2.0*PI * fragTexCoord.x;
+    float phi   =     PI * fragTexCoord.y;
+    float r     = sin(phi);
     vec4 texel = texture2D(samplerText, fragTexCoord);
-    gl_FragColor = texel;
+    float ds = 0.5/width;
+    float dt = 0.5/height;
+    float Hms = texture2D(samplerText, fragTexCoord - vec2(ds,  0.0)).r;
+    float Hps = texture2D(samplerText, fragTexCoord + vec2(ds,  0.0)).r;
+    float Hmt = texture2D(samplerText, fragTexCoord - vec2(0.0,  dt)).r;
+    float Hpt = texture2D(samplerText, fragTexCoord + vec2(0.0,  dt)).r;
+    vec3 Tangent = vec3(2.0*PI * r * ds, 0, (Hps - Hms)*bumpRange);
+    vec3 BiTan   = vec3(0,      PI * dt,   -(Hpt - Hmt)*bumpRange);
+    vec3 Norm    = normalize(cross(Tangent, BiTan));
+    gl_FragColor = vec4(0.5*Norm + vec3(0.5), 1.0);
   }
 
 </script>
@@ -101,6 +119,12 @@ function main(){
     console.log('Attempting to use "experimental-webgl" context.');
     gl = canvas.getContext('experimental-webgl');
   }
+  if(!gl){
+    alert('WebGL is not supported');
+    return;
+  }
+
+  document.getElementById('maxDims').innerHTML = 'The max image dimension allowed is ' + gl.getParameter(gl.MAX_TEXTURE_SIZE) + 'px';
 }
 
 var image;
@@ -269,6 +293,17 @@ function convertBumpMapToNormalMap(){
 
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, bumpMap);
+
+  // Output dimensions (uniforms)
+  var bumpRange = Number(document.getElementById('bumpRange').value);
+
+  var widthLoc  = gl.getUniformLocation(program, 'width');
+  var heightLoc = gl.getUniformLocation(program, 'height');
+  var bumpLoc   = gl.getUniformLocation(program, 'bumpRange');
+
+  gl.uniform1f(widthLoc, width);
+  gl.uniform1f(heightLoc, height);
+  gl.uniform1f(bumpLoc, bumpRange);
   
   gl.drawArrays(gl.TRIANGLES, 0, 6);
   
