@@ -87,8 +87,8 @@
     float phi   =     PI * fragTexCoord.y;
     float r     = sin(phi);
     vec4 texel = texture2D(samplerText, fragTexCoord);
-    float ds = 0.5/width;
-    float dt = 0.5/height;
+    float ds = min(max(0.5/width, 0.25/(width * r)), 0.25);
+    float dt =     0.5/ height;
     float Hms = texture2D(samplerText, fragTexCoord - vec2(ds,  0.0)).r;
     float Hps = texture2D(samplerText, fragTexCoord + vec2(ds,  0.0)).r;
     float Hmt = texture2D(samplerText, fragTexCoord - vec2(0.0,  dt)).r;
