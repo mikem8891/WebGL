@@ -16,3 +16,5 @@ Demo 6: [Specular highlights in WebGL](Demo_6/WebGL_06_Lighting.html)
 Other Projects
 
 [Mandelbrot Set Explorer](Mandelbrot/) (GPU intensive)
+
+[Convert a bump map for a UV sphere to a normal map](BumpToNormal/)
