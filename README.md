@@ -17,4 +17,4 @@ Other Projects
 
 [Mandelbrot Set Explorer](Mandelbrot/) (GPU intensive)
 
-[Convert a bump map for a UV sphere to a normal map](BumpToNormal/)
+[Convert a bump map to a normal map](BumpToNormal/) for a UV sphere 
