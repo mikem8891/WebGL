@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Sphere JSON 3D model</title>
+</head>
+<body>
+
+<h1>Sphere JSON 3D model</h1>
+
+<a id="downloadModel" download="sphere.json">Download</a><br>
+<textarea id="output" rows="30" cols="35">
+</textarea>
+
+</body>
+<script>
+  function main(){
+    var icosa = {'coordins': [], 'indices': []};
+    
+    var z = 1/Math.sqrt(5);
+    var r = 2*z;
+    
+    // Icosahedron spherical coordinates
+    let theta, phi = 0;
+    for (let i=0; i<5; i++){
+      theta = (i*2+1)/5*Math.PI;
+      icosa.coordins.push(theta, phi);
+    }
+    phi = Math.acos(z);
+    for (let i=0; i<=5; i++){
+      theta = i*2/5*Math.PI;
+      icosa.coordins.push(theta, phi);
+    }
+    phi = Math.PI - phi;
+    for (let i=0; i<=5; i++){
+      theta = (i*2+1)/5*Math.PI;
+      icosa.coordins.push(theta, phi);
+    }
+    phi = Math.PI;
+    for (let i=0; i<5; i++){
+      theta = (i+1)*2/5*Math.PI;
+      icosa.coordins.push(theta, phi);
+    }
+    
+    // Setting the indices of the faces
+    for (let i=0; i<5; i++){
+      icosa.indices.push(0+i,  5+i,  6+i);
+      icosa.indices.push(5+i,  11+i, 6+i);
+      icosa.indices.push(6+i,  11+i, 12+i);
+      icosa.indices.push(11+i, 17+i, 12+i);
+    }
+    
+    // Divide faces into smaller triangles
+    var sphere = dividePolyhedron(icosa);
+    sphere = dividePolyhedron(sphere);
+    var sphere = consolidateCoordins(sphere.coordins, sphere.indices);
+    let sphereVerts = coodinsToVerts(sphere.coordins);
+    let sphereTextureCoordins = coodinsToTextureCoordins(sphere.coordins);
+    let sphereCoordinSys = coodinsToSurfaceCoodinSys(sphere.coordins);
+
+    var output = {
+      'vertices'   : sphereVerts, 
+      'normals'    : sphereVerts,
+      'texCoordin' : sphereTextureCoordins,
+      'indices'    : sphere.indices,
+      'normals'    : sphereCoordinSys.normals,
+      'tangents'   : sphereCoordinSys.tangents,
+      'bitangents' : sphereCoordinSys.bitangents
+    };
+    
+    document.getElementById('output').value = JSON.stringify(output, null, '  ');
+    document.getElementById('downloadModel').href = 'data:text/plain;base64,' + btoa(JSON.stringify(output, null, '  '));
+  }
+  
+  function divideTriangle(theta0, phi0, theta1, phi1, theta2, phi2){
+    let x0 = Math.sin(phi0) * Math.cos(theta0);
+    let y0 = Math.sin(phi0) * Math.sin(theta0);
+    let z0 = Math.cos(phi0);
+    let x1 = Math.sin(phi1) * Math.cos(theta1);
+    let y1 = Math.sin(phi1) * Math.sin(theta1);
+    let z1 = Math.cos(phi1);
+    let x2 = Math.sin(phi2) * Math.cos(theta2);
+    let y2 = Math.sin(phi2) * Math.sin(theta2);
+    let z2 = Math.cos(phi2);
+    let x3 = x0 + x1;
+    let y3 = y0 + y1;
+    let z3 = z0 + z1;
+    let x4 = x1 + x2;
+    let y4 = y1 + y2;
+    let z4 = z1 + z2;
+    let x5 = x0 + x2;
+    let y5 = y0 + y2;
+    let z5 = z0 + z2;
+    /*     2
+          / \
+         5 - 4
+        / \ / \
+       0 - 3 - 1
+    */
+    var theta3, theta4, theta5;
+    if (Math.sin(phi0) >= Math.sin(phi1)){
+      theta3 = theta0 + Math.atan2(x0*y3 - y0*x3, x0*x3 + y0*y3);
+    }else{
+      theta3 = theta1 + Math.atan2(x1*y3 - y1*x3, x1*x3 + y1*y3);
+    }
+    let phi3 = Math.atan2(Math.sqrt(x3*x3 + y3*y3), z3);
+
+    if (Math.sin(phi1) >= Math.sin(phi2)){
+      theta4 = theta1 + Math.atan2(x1*y4 - y1*x4, x1*x4 + y1*y4);
+    }else{
+      theta4 = theta2 + Math.atan2(x2*y4 - y2*x4, x2*x4 + y2*y4);
+    }
+    let phi4 = Math.atan2(Math.sqrt(x4*x4 + y4*y4), z4);
+
+    if (Math.sin(phi0) >= Math.sin(phi2)){
+      theta5 = theta0 + Math.atan2(x0*y5 - y0*x5, x0*x5 + y0*y5);
+    }else{
+      theta5 = theta2 + Math.atan2(x2*y5 - y2*x5, x2*x5 + y2*y5);
+    }
+    let phi5 = Math.atan2(Math.sqrt(x5*x5 + y5*y5), z5);
+
+    return [
+      theta0, phi0, theta1, phi1, theta2, phi2,
+      theta3, phi3, theta4, phi4, theta5, phi5
+    ];
+  }
+
+  function dividePolyhedron(poly){
+    var oldCoordins = poly.coordins;
+    var oldIndices  = poly.indices;
+    var newCoordins = [];
+    var newIndices  = [];
+    var facesTotal = oldIndices.length/3;
+    for (let i=0; i<facesTotal; i++){
+      let tri = divideTriangle(oldCoordins[2*oldIndices[3*i    ]], oldCoordins[2*oldIndices[3*i    ] + 1],
+                               oldCoordins[2*oldIndices[3*i + 1]], oldCoordins[2*oldIndices[3*i + 1] + 1],
+                               oldCoordins[2*oldIndices[3*i + 2]], oldCoordins[2*oldIndices[3*i + 2] + 1]);
+      let len = newCoordins.length/2;
+      newCoordins = newCoordins.concat(tri);
+      newIndices.push(len + 0, len + 3, len + 5,
+                      len + 3, len + 1, len + 4,
+                      len + 3, len + 4, len + 5,
+                      len + 5, len + 4, len + 2);
+    }
+    return {'coordins': newCoordins, 'indices': newIndices};;
+  }
+
+  function coordinIndex(coordins, theta, phi){
+    let len = coordins.length/2;
+    for(let i=0; i<len; i++){
+      if (theta == coordins[2*i] && phi == coordins[2*i + 1])
+        return i;
+      if (theta == null || phi == null)
+        console.error('theta is :', theta, ' and phi is :', phi);
+    }
+    return -1;
+  }
+
+  function consolidateCoordins(coordins, indices){
+    let newCoordins = [];
+    let newIndices = [];
+    let len = indices.length;
+    for (let i=0; i<len; i++){
+      let theta = coordins[2*indices[i]];
+      let phi   = coordins[2*indices[i] + 1];
+      let index = coordinIndex(newCoordins, theta, phi);
+      if (index == -1){
+        newIndices.push(newCoordins.length/2);
+        newCoordins.push(theta, phi);
+      }else{
+        newIndices.push(index);
+      }
+    }
+    return {'coordins': newCoordins, 'indices': newIndices};
+  }
+
+  function coodinsToVerts(coodins){
+    var verts = [];
+    let len = coodins.length/2;
+    for (let i=0; i<len; i++){
+      let theta = coodins[2*i];
+      let phi   = coodins[2*i + 1];
+      let x = Math.sin(phi) * Math.cos(theta);
+      let y = Math.sin(phi) * Math.sin(theta);
+      let z = Math.cos(phi);
+      verts.push(x, y, z);
+    }
+    return verts;
+  }
+  function coodinsToTextureCoordins(coodins){
+    var textureCoordins = [];
+    let len = coodins.length/2;
+    for (let i=0; i<len; i++){
+      let theta = coodins[2*i];
+      let phi   = coodins[2*i + 1];
+      let s = theta / (2 * Math.PI);
+      let t = phi / Math.PI;
+      textureCoordins.push(s, t);
+    }
+    return textureCoordins;
+  }
+  function coodinsToSurfaceCoodinSys(coodins){
+    var normals = [];
+    var tangents = [];
+    var bitangents = [];
+    let len = coodins.length/2;
+    for (let i=0; i<len; i++){
+      let theta = coodins[2*i];
+      let phi   = coodins[2*i + 1];
+      let x = Math.sin(phi) * Math.cos(theta);
+      let y = Math.sin(phi) * Math.sin(theta);
+      let z = Math.cos(phi);
+      let r = Math.sqrt(x*x + y*y);
+      normals.push(        x,      y, z);
+      tangents.push(    -y/r,    x/r, 0);
+      bitangents.push(-x*z/r, -y*z/r, r);
+    }
+    var coordinateSys = {'normals': normals, 'tangents': tangents, 'bitangents': bitangents}
+    return coordinateSys;
+  }
+
+  window.onload = main;
+</script>
+
+</html>
