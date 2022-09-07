@@ -43,10 +43,10 @@
     
     // Setting the indices of the faces
     for (let i=0; i<5; i++){
-      icosa.indices.push(0+i,  5+i,  6+i);
-      icosa.indices.push(5+i,  11+i, 6+i);
-      icosa.indices.push(6+i,  11+i, 12+i);
-      icosa.indices.push(11+i, 17+i, 12+i);
+      icosa.indices.push([0+i,  5+i,  6+i]);
+      icosa.indices.push([5+i,  11+i, 6+i]);
+      icosa.indices.push([6+i,  11+i, 12+i]);
+      icosa.indices.push([11+i, 17+i, 12+i]);
     }
     
     // Divide faces into smaller triangles
@@ -57,15 +57,25 @@
     let sphereTextureCoordins = coodinsToTextureCoordins(sphere.coordins);
     let sphereCoordinSys = coodinsToSurfaceCoodinSys(sphere.coordins);
 
-    var output = {
-      'vertices'   : sphereVerts, 
-      'normals'    : sphereVerts,
-      'texCoordin' : sphereTextureCoordins,
-      'indices'    : sphere.indices,
-      'normals'    : sphereCoordinSys.normals,
-      'tangents'   : sphereCoordinSys.tangents,
-      'bitangents' : sphereCoordinSys.bitangents
+    var metadata = {
+        'format'  : 'assimp2json',
+        'version' : 100
     };
+
+    var mesh = {
+      'bitangents'    : sphereCoordinSys.bitangents,
+      'faces'         : sphere.indices, 'primitivetypes' : 4, // 4 = triangles
+      'name'          : 'sphere',
+      'normals'       : sphereCoordinSys.normals,
+      'tangents'      : sphereCoordinSys.tangents,
+      'texturecoords' : [sphereTextureCoordins], 'numuvcomponents' : [2],
+      'vertices'      : sphereVerts, 
+    };
+
+    var output = {
+        '__metadata__' : metadata,
+        'meshes'       : [mesh]
+    }
     
     document.getElementById('output').value = JSON.stringify(output, null, '  ');
     document.getElementById('downloadModel').href = 'data:text/plain;base64,' + btoa(JSON.stringify(output, null, '  '));
@@ -129,17 +139,17 @@
     var oldIndices  = poly.indices;
     var newCoordins = [];
     var newIndices  = [];
-    var facesTotal = oldIndices.length/3;
+    var facesTotal = oldIndices.length;
     for (let i=0; i<facesTotal; i++){
-      let tri = divideTriangle(oldCoordins[2*oldIndices[3*i    ]], oldCoordins[2*oldIndices[3*i    ] + 1],
-                               oldCoordins[2*oldIndices[3*i + 1]], oldCoordins[2*oldIndices[3*i + 1] + 1],
-                               oldCoordins[2*oldIndices[3*i + 2]], oldCoordins[2*oldIndices[3*i + 2] + 1]);
+      let tri = divideTriangle(oldCoordins[2*oldIndices[i][0]], oldCoordins[2*oldIndices[i][0] + 1],
+                               oldCoordins[2*oldIndices[i][1]], oldCoordins[2*oldIndices[i][1] + 1],
+                               oldCoordins[2*oldIndices[i][2]], oldCoordins[2*oldIndices[i][2] + 1]);
       let len = newCoordins.length/2;
       newCoordins = newCoordins.concat(tri);
-      newIndices.push(len + 0, len + 3, len + 5,
-                      len + 3, len + 1, len + 4,
-                      len + 3, len + 4, len + 5,
-                      len + 5, len + 4, len + 2);
+      newIndices.push([len + 0, len + 3, len + 5],
+                      [len + 3, len + 1, len + 4],
+                      [len + 3, len + 4, len + 5],
+                      [len + 5, len + 4, len + 2]);
     }
     return {'coordins': newCoordins, 'indices': newIndices};;
   }
@@ -160,15 +170,18 @@
     let newIndices = [];
     let len = indices.length;
     for (let i=0; i<len; i++){
-      let theta = coordins[2*indices[i]];
-      let phi   = coordins[2*indices[i] + 1];
-      let index = coordinIndex(newCoordins, theta, phi);
-      if (index == -1){
-        newIndices.push(newCoordins.length/2);
-        newCoordins.push(theta, phi);
-      }else{
-        newIndices.push(index);
-      }
+      newIndices.push([]);
+      for (let j=0; j<3; j++){
+        let theta = coordins[2*indices[i][j]];
+        let phi   = coordins[2*indices[i][j] + 1];
+        let index = coordinIndex(newCoordins, theta, phi);
+        if (index == -1){
+            newIndices[i].push(newCoordins.length/2);
+            newCoordins.push(theta, phi);
+        }else{
+            newIndices[i].push(index);
+        }
+        }
     }
     return {'coordins': newCoordins, 'indices': newIndices};
   }
@@ -206,13 +219,15 @@
     for (let i=0; i<len; i++){
       let theta = coodins[2*i];
       let phi   = coodins[2*i + 1];
-      let x = Math.sin(phi) * Math.cos(theta);
-      let y = Math.sin(phi) * Math.sin(theta);
-      let z = Math.cos(phi);
-      let r = Math.sqrt(x*x + y*y);
-      normals.push(        x,      y, z);
-      tangents.push(    -y/r,    x/r, 0);
-      bitangents.push(-x*z/r, -y*z/r, r);
+      let rx = Math.cos(theta);
+      let ry = Math.sin(theta);
+      let rz = Math.sin(phi);
+      let x  = rz * rx;
+      let y  = rz * ry;
+      let z  = Math.cos(phi);
+      normals.push(       x,     y,  z);
+      tangents.push(    -ry,    rx,  0);
+      bitangents.push(-rx*z, -ry*z, rz);
     }
     var coordinateSys = {'normals': normals, 'tangents': tangents, 'bitangents': bitangents}
     return coordinateSys;

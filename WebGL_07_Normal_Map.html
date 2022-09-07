@@ -187,19 +187,19 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture, specMap){
   
   // Specify vertices
   // Typically this is 'model.meshes[i].vertices' in a JSON model;
-  var earthVertices = model.vertices;
+  var earthVertices = model.meshes[0].vertices;
   
   // Specify normals
   // Typically this is 'model.meshes[i].normals' in a JSON model;
-  var earthNormals = model.normals;
+  var earthNormals = model.meshes[0].normals;
   
   // Specify the texture coordinates
   // Typically this is 'model.meshes[i].texturecoords[j]' in a JSON model;
-  var earthTexCoords = model.texCoordin;
+  var earthTexCoords = model.meshes[0].texturecoords[0];
   
   // Specify the indices for each face
   // Typically this is '[].concat.apply([], model.meshes[i].faces)' in a JSON model;
-  var earthIndices = model.indices;
+  var earthIndices = [].concat.apply([], model.meshes[0].faces);
   
   // Create buffers
   // Set Attributes (shader inputs)
@@ -396,11 +396,11 @@ function resizeCanvas(gl) {
   var canvasBox = canvas.getBoundingClientRect();
   var DPR = window.devicePixelRatio || 1;
 
-  var displayWidth = Math.round(canvasBox.width * DPR);
+  var displayWidth  = Math.round(canvasBox.width  * DPR);
   var displayHeight = Math.round(canvasBox.height * DPR);
 
   if (canvas.width != displayWidth || canvas.height != displayHeight) {
-    canvas.width = displayWidth;
+    canvas.width  = displayWidth;
     canvas.height = displayHeight;
     gl.viewport(0, 0, displayWidth, displayHeight);
     return true;

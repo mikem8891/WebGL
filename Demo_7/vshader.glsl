@@ -15,8 +15,8 @@ varying vec3 fragNormal;
 varying vec2 fragTexCoord;
 
 void main(){
-  gl_Position  = mProj * mView * mWorld * vec4(vertPosition, 1.0);
+  fragPosition = (mWorld * vec4(vertNormal, 1.0)).xyz;
   fragNormal   = (mWorld * vec4(vertNormal, 0.0)).xyz;
+  gl_Position  = mProj * mView * vec4(fragPosition, 1.0);
   fragTexCoord = vertTexCoord;
-  fragPosition = vertPosition;
 }
