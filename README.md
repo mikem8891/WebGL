@@ -13,6 +13,8 @@ Demo 5: [Lighting in WebGL](Demo_5/WebGL_05_Lighting.html)
 
 Demo 6: [Specular highlights in WebGL](Demo_6/WebGL_06_Lighting.html)
 
+Demo 6: [Normal Map in WebGL](WebGL_07_Normal_Map.html)
+
 Other Projects
 
 [Mandelbrot Set Explorer](Mandelbrot/) (GPU intensive)

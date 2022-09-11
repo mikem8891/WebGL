@@ -89,13 +89,14 @@ function loadAssets(){
     loadText('Demo_7/vshader.glsl'),
     loadText('Demo_7/fshader.glsl'),
     loadJSON('sphere.json'),
-    loadImage('Earth/earth_specular.png')])
-    .then(function ([texture, vertShader, fragShader, model, specMap]) {
-      runDemo(vertShader, fragShader, model, texture, specMap);})
+    loadImage('Earth/earth_specular.png'),
+    loadImage('Earth/earth_normMap.png')])
+    .then(function ([texture, vertShader, fragShader, model, specMap, normMap]) {
+      runDemo(vertShader, fragShader, model, texture, specMap, normMap);})
     .catch(function (err) {console.error(err);});
 }
 
-function runDemo(vertexShaderText, fragmentShaderText, model, texture, specMap){
+function runDemo(vertexShaderText, fragmentShaderText, model, texture, specMap, normMap){
   console.log('Working');
   
   const canvas = document.getElementById('renderCanvas');
@@ -191,7 +192,9 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture, specMap){
   
   // Specify normals
   // Typically this is 'model.meshes[i].normals' in a JSON model;
-  var earthNormals = model.meshes[0].normals;
+  var earthNormals    = model.meshes[0].normals;
+  var earthTangents   = model.meshes[0].tangents;
+  var earthBitangents = model.meshes[0].bitangents;
   
   // Specify the texture coordinates
   // Typically this is 'model.meshes[i].texturecoords[j]' in a JSON model;
@@ -214,6 +217,12 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture, specMap){
   var earthNormBufferObject = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, earthNormBufferObject);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(earthNormals), gl.STATIC_DRAW);
+  var earthTanBufferObject = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, earthTanBufferObject);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(earthTangents), gl.STATIC_DRAW);
+  var earthBitanBufferObject = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, earthBitanBufferObject);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(earthBitangents), gl.STATIC_DRAW);
   
   var earthIndexBufferObject = gl.createBuffer();
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, earthIndexBufferObject);
@@ -242,6 +251,30 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture, specMap){
     0  // Offset from the beginning of a single vertex to this attribute
   );
   gl.enableVertexAttribArray(normalAttribLocation); // Enables the attribute
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, earthTanBufferObject);
+  var tangentAttribLocation = gl.getAttribLocation(program, 'vertTangent'); 
+  gl.vertexAttribPointer(
+    tangentAttribLocation,  // Attribute location 
+    3,                     // Number of elements per attribute (X, Y, Z)
+    gl.FLOAT,              // Data type of the elements
+    gl.TRUE,               // Whether the elements are normalized
+    3 * Float32Array.BYTES_PER_ELEMENT,  // Size of an individual vertex
+    0  // Offset from the beginning of a single vertex to this attribute
+  );
+  gl.enableVertexAttribArray(tangentAttribLocation); // Enables the attribute
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, earthNormBufferObject);
+  var bitanAttribLocation = gl.getAttribLocation(program, 'vertBitan'); 
+  gl.vertexAttribPointer(
+    bitanAttribLocation,  // Attribute location 
+    3,                     // Number of elements per attribute (X, Y, Z)
+    gl.FLOAT,              // Data type of the elements
+    gl.TRUE,               // Whether the elements are normalized
+    3 * Float32Array.BYTES_PER_ELEMENT,  // Size of an individual vertex
+    0  // Offset from the beginning of a single vertex to this attribute
+  );
+  gl.enableVertexAttribArray(bitanAttribLocation); // Enables the attribute
   
   gl.bindBuffer(gl.ARRAY_BUFFER, earthTexCoordBufferObject);
   var texCoordAttribLocation = gl.getAttribLocation(program, 'vertTexCoord'); 
@@ -290,6 +323,23 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture, specMap){
   );
   gl.generateMipmap(gl.TEXTURE_2D);
 
+  var earthNorm = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, earthNorm);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+  gl.texImage2D(
+    gl.TEXTURE_2D, // target (a 2D texture)
+    0,             // level (level 0 is the base image)
+    gl.RGBA,       // internal format 
+    gl.RGBA,       // format (in WebGL this needs to match the internal format)
+    gl.UNSIGNED_BYTE, // type (8 bits)
+    normMap  // pixels (HTMLImageElement)
+  );
+  gl.generateMipmap(gl.TEXTURE_2D);
+
   // Tells WebGL what program to use
   gl.useProgram(program);
 
@@ -297,13 +347,17 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture, specMap){
   // Textures
   var earthTextLoc = gl.getUniformLocation(program, "samplerText");
   var earthSpecLoc = gl.getUniformLocation(program, "samplerSpec");
+  var earthNormLoc = gl.getUniformLocation(program, "samplerNorm");
   gl.uniform1i(earthTextLoc, 0);
   gl.uniform1i(earthSpecLoc, 1);
+  gl.uniform1i(earthNormLoc, 2);
 
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, earthTexture);
   gl.activeTexture(gl.TEXTURE1);
   gl.bindTexture(gl.TEXTURE_2D, earthSpec);
+  gl.activeTexture(gl.TEXTURE2);
+  gl.bindTexture(gl.TEXTURE_2D, earthNorm);
 
   // Matrices
   var viewPositionLocation    = gl.getUniformLocation(program, 'viewPos');

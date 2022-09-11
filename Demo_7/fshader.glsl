@@ -11,19 +11,27 @@ struct DirectionalLight{
 
 uniform sampler2D samplerText;
 uniform sampler2D samplerSpec;
+uniform sampler2D samplerNorm;
 uniform vec3 ambLightInt;
 uniform DirectionalLight sun;
 uniform vec3 viewPos;
 
 varying vec3 fragPosition;
 varying vec3 fragNormal;
+varying vec3 fragTangent;
+varying vec3 fragBitan;
 varying vec2 fragTexCoord;
 
 void main(){
   
-  vec3 normSunDir   = normalize(sun.direction);
-  vec3 surfaceNorm  = normalize(fragNormal);
-  vec3 reflectedRay = reflect(-normSunDir, surfaceNorm);
+  vec3 normSunDir    = normalize(sun.direction);
+  vec3 texelNorm     = 2.0 * texture2D(samplerNorm, fragTexCoord).rgb - 1.0;
+  vec3 normFragNorm  = normalize(fragNormal);
+  vec3 normFragTan   = normalize(fragTangent - dot(normFragNorm, fragTangent));
+  vec3 normFragBitan = cross(normFragNorm, normFragTan);
+  mat3 tanSpace      = mat3(normFragTan, normFragBitan, normFragNorm);
+  vec3 surfaceNorm   = normalize(tanSpace * texelNorm);
+  vec3 reflectedRay  = reflect(-normSunDir, surfaceNorm);
   
   vec4 texel = texture2D(samplerText, fragTexCoord);
   #if Convert_sRGB_to_Lin
