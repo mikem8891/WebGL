@@ -34,8 +34,8 @@
 <body>
   <div>
     <h1>Convert a UV Map to a Cube Map for a Sphere</h1>
-    <label for="outputWidth">output side dimension: 
-      <input type="number" id="outputDim"  name="outputDim"  value="1024" min="1" onchange="convertUVMapToCubeMap()"/>
+    <label>output side dimension: 
+      <input type="number" id="outputDim"  name="outputDim"  value="512" min="1" onchange="convertUVMapToCubeMap()"/>
     </label>
     <label>Choose a UV map to upload 
       <input type="file" id="myFile" name="myFile" accept="image/*" />
@@ -44,7 +44,26 @@
     <a id="downloadLink" download hidden>Download Cube Map</a>
   </div>
   <div class="flex">
-    <canvas id="renderCanvas">
+    <table>
+      <tr>
+        <td></td>
+        <td><a id="yPlusLink"  download><img id="yPlus"> </a></td>
+        <td></td><td></td>
+      </tr>
+      <tr>
+        <td><a id="xPlusLink"  download><img id="xPlus"> </a></td>
+        <td><a id="zPlusLink"  download><img id="zPlus"> </a></td>
+        <td><a id="xMinusLink" download><img id="xMinus"></a></td>
+        <td><a id="zMinusLink" download><img id="zMinus"></a></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td><a id="yMinusLink"  download><img id="yMinus"> </a></td>
+        <td></td><td></td>
+      </tr>
+    </table>
+    <img id="sourceImage" hidden>
+    <canvas id="renderCanvas" hidden>
       Browser does not support HTML5
     </canvas>
   </div>
@@ -58,14 +77,16 @@
 <script id="vshader" type="x-shader/x-vertex">
 
   precision highp float;
-  attribute vec2 vertPosition;
-  attribute vec2 vertTexCoord;
 
-  varying vec2 fragTexCoord;
+  uniform mat3 uvToNorm;
+
+  attribute vec2 vertPosition;
+
+  varying vec3 fragPosition;
 
   void main(){
     gl_Position = vec4(vertPosition, 0.0, 1.0);
-    fragTexCoord = vertTexCoord;
+    fragPosition = uvToNorm * vec3(vertPosition, 1.0);
   }
 
 </script>
@@ -76,28 +97,17 @@
   precision highp float;
 
   uniform sampler2D samplerText;
-  uniform float width;
-  uniform float height;
-  uniform float bumpRange;
 
-  varying vec2 fragTexCoord;
+  varying vec3 fragPosition;
 
   void main(){
     const float PI = 3.1415926535;
-    float theta = 2.0*PI * fragTexCoord.x;
-    float phi   =     PI * fragTexCoord.y;
-    float r     = sin(phi);
+    float r     = sqrt(dot(fragPosition.xy, fragPosition.xy));
+    float theta = atan(fragPosition.y, fragPosition.x);
+    float phi   = atan(r, fragPosition.z);
+    vec2 fragTexCoord = vec2(theta/(2.0*PI), phi/PI);
     vec4 texel = texture2D(samplerText, fragTexCoord);
-    float ds = min(max(0.5/width, 0.25/(width * r)), 0.25);
-    float dt =     0.5/ height;
-    float Hms = texture2D(samplerText, fragTexCoord - vec2(ds,  0.0)).r;
-    float Hps = texture2D(samplerText, fragTexCoord + vec2(ds,  0.0)).r;
-    float Hmt = texture2D(samplerText, fragTexCoord - vec2(0.0,  dt)).r;
-    float Hpt = texture2D(samplerText, fragTexCoord + vec2(0.0,  dt)).r;
-    vec3 Tangent = vec3(2.0*PI * r * ds, 0, (Hps - Hms)*bumpRange);
-    vec3 BiTan   = vec3(0,      PI * dt,   -(Hpt - Hmt)*bumpRange);
-    vec3 Norm    = normalize(cross(Tangent, BiTan));
-    gl_FragColor = vec4(0.5*Norm + vec3(0.5), 1.0);
+    gl_FragColor = texel;
   }
 
 </script>
@@ -137,10 +147,10 @@ document.getElementById('myFile').oninput =  function(evt){
     return;
   }
   var reader = new FileReader();
-  var img = new Image();
+  var img = document.getElementById('sourceImage');
   img.onload = function(){
     image = img;
-    convertBumpMapToNormalMap(image)
+    convertUVMapToCubeMap();
   }
   reader.onload = function(){
     img.src = reader.result;
@@ -148,29 +158,24 @@ document.getElementById('myFile').oninput =  function(evt){
   reader.readAsDataURL(file);
 }
 
-function convertBumpMapToNormalMap(){
+function convertUVMapToCubeMap(){
   // Set size of the canvas based on inputs
 
-  var width  = Number(document.getElementById('outputWidth').value);
-  var height = Number(document.getElementById('outputHeight').value);
-  if (!(width > 0 && height > 0)){
-    console.error('ERROR: fix height or width inputs');
+  var dim  = Number(document.getElementById('outputDim').value);
+  if (dim <= 0){
+    console.error('ERROR: fix output dimension');
     return;
   }
-  canvas.width  = width;
-  canvas.height = height;
-  canvas.style.width  = width  + 'px';
-  canvas.style.height = height + 'px';
+  canvas.width  = dim;
+  canvas.height = dim;
+  canvas.style.width  = dim + 'px';
+  canvas.style.height = dim + 'px';
 
   gl.viewport(0, 0, canvas.width, canvas.height)
 
   if (!image)
     return;
 
-  // Clears the canvas
-  gl.clearColor(0.05, 0.05, 0.05, 1.00);
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  
   if (!program){
     // Create Blank Shaders Object
     var vertexShader   = gl.createShader(gl.VERTEX_SHADER);
@@ -229,17 +234,6 @@ function convertBumpMapToNormalMap(){
        1.0, -1.0
     ]
 
-    var texCoordins = [
-      //S,   T,
-      0.0, 0.0,
-      0.0, 1.0,
-      1.0, 0.0,
-
-      0.0, 1.0,
-      1.0, 0.0,
-      1.0, 1.0
-    ];
-
     var vertBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vertBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW);
@@ -252,27 +246,48 @@ function convertBumpMapToNormalMap(){
       2 * Float32Array.BYTES_PER_ELEMENT,  // Size of an individual vertex
       0  // Offset from the beginning of a single vertex to this attribute
     );
-
-    var texCoordinBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, texCoordinBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(texCoordins), gl.STATIC_DRAW);
-    var texCoordinAttribLocation = gl.getAttribLocation(program, 'vertTexCoord'); 
-    gl.vertexAttribPointer(
-      texCoordinAttribLocation,  // Attribute location 
-      2,                       // Number of elements per attribute (S, T)
-      gl.FLOAT,                // Data type of the elements
-      gl.FALSE,                // Whether the elements are normalized
-      2 * Float32Array.BYTES_PER_ELEMENT,  // Size of an individual vertex
-      0  // Offset from the beginning of a single vertex to this attribute
-    );
     gl.enableVertexAttribArray(positionAttribLocation);   // Enables the attribute
-    gl.enableVertexAttribArray(texCoordinAttribLocation); // Enables the attribute
   }
 
-  var bumpMap = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, bumpMap);
+  var uvToNorm = [
+    // X+
+    [ 0,  0,  1,
+      0,  1,  0,
+      1,  0,  0],
+    // X-
+    [ 0,  0, -1,
+      0,  1,  0,
+      -1,  0,  0],
+    // Y+
+    [-1,  0,  0,
+      0,  0, -1,
+      0,  1,  0],
+    // Y-
+    [-1,  0,  0,
+      0,  0,  1,
+      0, -1,  0],
+    // Z+
+    [-1,  0,  0,
+      0,  1,  0,
+      0,  0,  1],
+    // Z-
+    [ 1,  0,  0,
+      0,  1,  0,
+      0,  0, -1]
+  ];
+
+  var cubeFaceNames = [
+    'xPlus', 'xMinus',
+    'yPlus', 'yMinus',
+    'zPlus', 'zMinus',
+  ];
+
+  // Set uniforms (shader constants)
+  // Textures
+  var uvMap = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, uvMap);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
   gl.texImage2D(
@@ -286,32 +301,32 @@ function convertBumpMapToNormalMap(){
 
   // Tells WebGL what program to use
   gl.useProgram(program);
-
-  // Set uniforms (shader constants)
-  // Textures
-  var bumpMapLoc = gl.getUniformLocation(program, "samplerText");
-  gl.uniform1i(bumpMapLoc, 0);
+  
+  var uvMapLoc = gl.getUniformLocation(program, "samplerText");
+  gl.uniform1i(uvMapLoc, 0);
 
   gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(gl.TEXTURE_2D, bumpMap);
+  gl.bindTexture(gl.TEXTURE_2D, uvMap);
 
   // Output dimensions (uniforms)
-  var bumpRange = Number(document.getElementById('bumpRange').value);
-
-  var widthLoc  = gl.getUniformLocation(program, 'width');
-  var heightLoc = gl.getUniformLocation(program, 'height');
-  var bumpLoc   = gl.getUniformLocation(program, 'bumpRange');
-
-  gl.uniform1f(widthLoc, width);
-  gl.uniform1f(heightLoc, height);
-  gl.uniform1f(bumpLoc, bumpRange);
+  for(let i=0; i<6; i++){
+    var uvToNormMatLocation = gl.getUniformLocation(program, 'uvToNorm');
+    gl.uniformMatrix3fv(uvToNormMatLocation, gl.FALSE, new Float32Array(uvToNorm[i]));
+    
+    // Clears the canvas
+    gl.clearColor(0.0, 0.5, 0.0, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   
-  gl.drawArrays(gl.TRIANGLES, 0, 6);
-  
-  // Set download link
-  var downloadLink = document.getElementById('downloadLink');
-  downloadLink.href = canvas.toDataURL();
-  downloadLink.hidden = false;
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    
+    // Set download link
+    var faceImage     = document.getElementById(cubeFaceNames[i]);
+    var downloadLink  = document.getElementById(cubeFaceNames[i] + 'Link');
+    var imageData     = canvas.toDataURL();
+    faceImage.src     = imageData;
+    downloadLink.href = imageData;
+    downloadLink.download = cubeFaceNames[i] + '.png';
+  }
 }
 window.onload = main;
 </script>
