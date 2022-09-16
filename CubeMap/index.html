@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="HandheldFriendly" content="true" />
     <meta charset="UTF-8">
-    <title>Convert a Bump Map to a Normal Map for a Sphere</title>
+    <title>Convert a UV Map to a Cube Map for a Sphere</title>
     <style>
 
       html, body {
@@ -27,20 +27,21 @@
       }
 
       canvas {
-        background-color: #88F;
+        background-color: #000;
       }
     </style>
   </head>
 <body>
   <div>
-    <h1>Convert a Bump Map to a Normal Map for a Sphere</h1>
-    <label for="outputWidth" >output width:  </label><input type="number" id="outputWidth"  name="outputWidth"  value="2048" min="1" onchange="convertBumpMapToNormalMap()"/>
-    <label for="outputHeight">output height: </label><input type="number" id="outputHeight" name="outputHeight" value="1024" min="1" onchange="convertBumpMapToNormalMap()"/>
-    <label for="bumpRange">bump range:       </label><input type="number" id="bumpRange"    name="bumpRange"    value="0.00139" min="0" max="1" step=".00001" onchange="convertBumpMapToNormalMap()"/>
-    <label for="myFile">Choose a bump map to upload</label>
-    <input type="file" id="myFile" name="myFile" accept="image/*" />
+    <h1>Convert a UV Map to a Cube Map for a Sphere</h1>
+    <label for="outputWidth">output side dimension: 
+      <input type="number" id="outputDim"  name="outputDim"  value="1024" min="1" onchange="convertUVMapToCubeMap()"/>
+    </label>
+    <label>Choose a UV map to upload 
+      <input type="file" id="myFile" name="myFile" accept="image/*" />
+    </label>
     <span id="maxDims"></span>
-    <a id="downloadLink" download hidden>Download Normal Map</a>
+    <a id="downloadLink" download hidden>Download Cube Map</a>
   </div>
   <div class="flex">
     <canvas id="renderCanvas">
