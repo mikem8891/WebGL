@@ -322,10 +322,10 @@ function convertUVMapToCubeMap(){
     // Set download link
     var faceImage     = document.getElementById(cubeFaceNames[i]);
     var downloadLink  = document.getElementById(cubeFaceNames[i] + 'Link');
-    var imageData     = canvas.toDataURL();
+    var imageData     = canvas.toDataURL('image/jpeg', 1.0);
     faceImage.src     = imageData;
     downloadLink.href = imageData;
-    downloadLink.download = cubeFaceNames[i] + '.png';
+    downloadLink.download = cubeFaceNames[i] + '.jpg';
   }
 }
 window.onload = main;

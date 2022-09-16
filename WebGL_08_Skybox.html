@@ -91,8 +91,15 @@ function loadAssets(){
     loadJSON('sphere.json'),
     loadImage('Earth/earth_specular.png'),
     loadImage('Earth/earth_normMap.png'),
-    loadImage('Stars/StarCubeMap.png')])
-    .then(function ([texture, vertShader, fragShader, model, specMap, normMap, skyBox]) {
+    loadImage('Earth/Cube/xPlus.png'),
+    loadImage('Earth/Cube/xMinus.png'),
+    loadImage('Earth/Cube/yPlus.png'),
+    loadImage('Earth/Cube/yMinus.png'),
+    loadImage('Earth/Cube/zPlus.png'),
+    loadImage('Earth/Cube/zMinus.png')
+  ]).then(function ([texture, vertShader, fragShader, model, specMap, normMap, 
+                    skyBoxXp, skyBoxXm, skyBoxYp, skyBoxYm, skyBoxZp, skyBoxZm]) {
+      var skyBox = [skyBoxXp, skyBoxXm, skyBoxYp, skyBoxYm, skyBoxZp, skyBoxZm];
       runDemo(vertShader, fragShader, model, texture, specMap, normMap, skyBox);})
     .catch(function (err) {console.error(err);});
 }
@@ -341,17 +348,17 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture, specMap, 
   );
   gl.generateMipmap(gl.TEXTURE_2D);
 
-  var starMap = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_CUBE_MAP, starMap);
+  var earthCubeMap = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthCubeMap);
   console.log(gl.MAX_CUBE_MAP_TEXTURE_SIZE);
   gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
   gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, 1024, 1024, gl.RGBA, gl.UNSIGNED_BYTE, skyBox);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, 1024, 1024, gl.RGBA, gl.UNSIGNED_BYTE, skyBox);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, 1024, 1024, gl.RGBA, gl.UNSIGNED_BYTE, skyBox);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, 1024, 1024, gl.RGBA, gl.UNSIGNED_BYTE, skyBox);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, 1024, 1024, gl.RGBA, gl.UNSIGNED_BYTE, skyBox);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, 1024, 1024, gl.RGBA, gl.UNSIGNED_BYTE, skyBox);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, skyBox[0]);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, skyBox[1]);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, skyBox[2]);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, skyBox[3]);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, skyBox[4]);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, skyBox[5]);
   gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
 
   // Tells WebGL what program to use
@@ -375,7 +382,7 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture, specMap, 
   gl.activeTexture(gl.TEXTURE2);
   gl.bindTexture(gl.TEXTURE_2D, earthNorm);
   gl.activeTexture(gl.TEXTURE3);
-  gl.bindTexture(gl.TEXTURE_CUBE_MAP, starMap);
+  gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthCubeMap);
 
   // Matrices
   var viewPositionLocation    = gl.getUniformLocation(program, 'viewPos');
