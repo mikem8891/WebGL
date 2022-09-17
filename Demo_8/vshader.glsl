@@ -17,6 +17,7 @@ varying vec3 fragNormal;
 varying vec3 fragTangent;
 varying vec3 fragBitan;
 varying vec2 fragTexCoord;
+varying vec3 fragTexCoord3;
 
 void main(){
   fragPosition = (mWorld * vec4(vertPosition, 1.0)).xyz;
@@ -25,4 +26,5 @@ void main(){
   fragBitan    = (mWorld * vec4(vertBitan,    0.0)).xyz;
   gl_Position  = mProj * mView * vec4(fragPosition, 1.0);
   fragTexCoord = vertTexCoord;
+  fragTexCoord3= vertNormal;
 }
