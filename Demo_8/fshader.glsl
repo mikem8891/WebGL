@@ -9,10 +9,10 @@ struct DirectionalLight{
   vec3 color;
 };
 
-uniform sampler2D samplerText;
+uniform samplerCube samplerText;
 uniform sampler2D samplerSpec;
 uniform sampler2D samplerNorm;
-uniform samplerCube samplerSky;
+//uniform samplerCube samplerSky;
 uniform vec3 ambLightInt;
 uniform DirectionalLight sun;
 uniform vec3 viewPos;
@@ -49,7 +49,7 @@ void main(){
   vec3 reflectedRay  = reflect(-normSunDir, surfaceNorm);
   
 //  vec4 texel = texture2D(samplerText, fragTexCoord);
-  vec4 texel = textureCube(samplerSky, fragTexCoord3);
+  vec4 texel = textureCube(samplerText, fragTexCoord3);
   #if Convert_sRGB_to_Lin
   texel = texel * texel;
   #endif
