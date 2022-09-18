@@ -26,13 +26,17 @@ async function loadJSON(url) {
     throw 'Failed to load JSON from: ' + url;
   }
 }
-function loadCubemap(url) {
-  return new Promise( function (resolve, reject) {
-    let img = new Image();
-    img.onload = function () {return resolve(img);};
-    img.onerror = function () { 
-      return reject('Failed to load image from: ' + url);
-    };
-    img.src = url;
-  });
+async function loadCubemap(url, ext) {
+  if (ext == null){
+    ext = 'png';
+  }
+  let faces = await Promise.all([
+    loadImage(url + 'posX.' + ext),
+    loadImage(url + 'negX.' + ext),
+    loadImage(url + 'posY.' + ext),
+    loadImage(url + 'negY.' + ext),
+    loadImage(url + 'posZ.' + ext),
+    loadImage(url + 'negZ.' + ext)
+  ]);
+  return faces;
 }

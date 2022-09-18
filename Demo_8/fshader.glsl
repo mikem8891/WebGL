@@ -10,7 +10,7 @@ struct DirectionalLight{
 };
 
 uniform samplerCube samplerText;
-uniform sampler2D samplerSpec;
+uniform samplerCube samplerSpec;
 uniform sampler2D samplerNorm;
 //uniform samplerCube samplerSky;
 uniform vec3 ambLightInt;
@@ -54,7 +54,7 @@ void main(){
   texel = texel * texel;
   #endif
 
-  vec4 texelSpec = texture2D(samplerSpec, fragTexCoord);
+  vec4 texelSpec = textureCube(samplerSpec, fragTexCoord3);
   
   vec3 lightInt = ambLightInt +  // ambient light
     sun.color * max(dot(normSunDir, surfaceNorm), 0.0); // diffuse light

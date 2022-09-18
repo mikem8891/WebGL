@@ -60,22 +60,15 @@ function loadAssets(){
     loadText('Demo_8/vshader.glsl'),
     loadText('Demo_8/fshader.glsl'),
     loadJSON('sphere.json'),
-    loadImage('Earth/earth_specular.png'),
-    loadImage('Earth/earth_normMap.png'),
-    loadImage('Earth/True_Color/Cube/xPlus.png'),
-    loadImage('Earth/True_Color/Cube/xMinus.png'),
-    loadImage('Earth/True_Color/Cube/yPlus.png'),
-    loadImage('Earth/True_Color/Cube/yMinus.png'),
-    loadImage('Earth/True_Color/Cube/zPlus.png'),
-    loadImage('Earth/True_Color/Cube/zMinus.png')
-  ]).then(function ([vertShader, fragShader, model, specMap, normMap, 
-                    skyBoxXp, skyBoxXm, skyBoxYp, skyBoxYm, skyBoxZp, skyBoxZm]) {
-      var skyBox = [skyBoxXp, skyBoxXm, skyBoxYp, skyBoxYm, skyBoxZp, skyBoxZm];
-      runDemo(vertShader, fragShader, model, specMap, normMap, skyBox);})
+    loadCubemap('Earth/True_Color/Cube/'),
+    loadCubemap('Earth/Specular/Cube/'),
+    loadImage('Earth/earth_normMap.png')
+  ]).then(function ([vertShader, fragShader, model, texture, specMap, normMap]) {
+      runDemo(vertShader, fragShader, model, texture, specMap, normMap);})
     .catch(function (err) {console.error(err);});
 }
 
-function runDemo(vertexShaderText, fragmentShaderText, model, specMap, normMap, skyBox){
+function runDemo(vertexShaderText, fragmentShaderText, model, texture, specMap, normMap){
   console.log('Working');
   
   const canvas = document.getElementById('renderCanvas');
@@ -272,30 +265,25 @@ function runDemo(vertexShaderText, fragmentShaderText, model, specMap, normMap, 
   gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthCubeMap);
   gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
   gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, skyBox[0]);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, skyBox[1]);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, skyBox[2]);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, skyBox[3]);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, skyBox[4]);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, skyBox[5]);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, texture[0]);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, texture[1]);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, texture[2]);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, texture[3]);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, texture[4]);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, texture[5]);
   gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
   
   var earthSpec = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, earthSpec);
-  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texImage2D(
-    gl.TEXTURE_2D, // target (a 2D texture)
-    0,             // level (level 0 is the base image)
-    gl.LUMINANCE,       // internal format 
-    gl.LUMINANCE,       // format (in WebGL this needs to match the internal format)
-    gl.UNSIGNED_BYTE, // type (8 bits)
-    specMap  // pixels (HTMLImageElement)
-  );
-  gl.generateMipmap(gl.TEXTURE_2D);
+  gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthSpec);
+  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, specMap[0]);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, specMap[1]);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, specMap[2]);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, specMap[3]);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, specMap[4]);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, specMap[5]);
+  gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
 
   var earthNorm = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, earthNorm);
@@ -331,7 +319,7 @@ function runDemo(vertexShaderText, fragmentShaderText, model, specMap, normMap, 
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthCubeMap);
   gl.activeTexture(gl.TEXTURE1);
-  gl.bindTexture(gl.TEXTURE_2D, earthSpec);
+  gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthSpec);
   gl.activeTexture(gl.TEXTURE2);
   gl.bindTexture(gl.TEXTURE_2D, earthNorm);
 
