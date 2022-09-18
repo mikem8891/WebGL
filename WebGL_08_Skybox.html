@@ -44,67 +44,38 @@
 <!-- Library for graphics related maxtrix math -->
 <script src="lib/gl-matrix-min.js"></script>
 
+<!-- Custom utility library for this demo -->
+<script src="Demo_8/util.js"></script>
+
 <!-- Initialize WebGl canvas -->
 <script>
 
 function main(){
-  var canvas = document.getElementById("renderCanvas");
-  
   // load files and run the demo
   loadAssets();
 }
 
-function loadAssets(){
-  var loadImage  = function (url) {
-    return new Promise( function (resolve, reject) {
-      let img = new Image();
-      img.onload = function () {return resolve(img);};
-      img.onerror = function () { 
-        return reject('Failed to load image from: ' + url);
-      };
-      img.src = url;
-    });
-  }
-  var loadText = async function (url) {
-    let responce = await fetch(url);
-    let status = responce.status;
-    if (200 <= status && status < 300){
-      return responce.text();
-    } else {
-      throw 'Failed to load text from: ' + url;
-    }
-  }
-  var loadJSON = async function (url) {
-    let responce = await fetch(url);
-    let status = responce.status;
-    if (200 <= status && status < 300){
-      return responce.json();
-    } else {
-      throw 'Failed to load JSON from: ' + url;
-    }
-  }
-  
+function loadAssets(){  
   Promise.all([
-    loadImage('Earth/earth_true_color.jpg'),
     loadText('Demo_8/vshader.glsl'),
     loadText('Demo_8/fshader.glsl'),
     loadJSON('sphere.json'),
     loadImage('Earth/earth_specular.png'),
     loadImage('Earth/earth_normMap.png'),
-    loadImage('Earth/Cube/xPlus.png'),
-    loadImage('Earth/Cube/xMinus.png'),
-    loadImage('Earth/Cube/yPlus.png'),
-    loadImage('Earth/Cube/yMinus.png'),
-    loadImage('Earth/Cube/zPlus.png'),
-    loadImage('Earth/Cube/zMinus.png')
-  ]).then(function ([texture, vertShader, fragShader, model, specMap, normMap, 
+    loadImage('Earth/True_Color/Cube/xPlus.png'),
+    loadImage('Earth/True_Color/Cube/xMinus.png'),
+    loadImage('Earth/True_Color/Cube/yPlus.png'),
+    loadImage('Earth/True_Color/Cube/yMinus.png'),
+    loadImage('Earth/True_Color/Cube/zPlus.png'),
+    loadImage('Earth/True_Color/Cube/zMinus.png')
+  ]).then(function ([vertShader, fragShader, model, specMap, normMap, 
                     skyBoxXp, skyBoxXm, skyBoxYp, skyBoxYm, skyBoxZp, skyBoxZm]) {
       var skyBox = [skyBoxXp, skyBoxXm, skyBoxYp, skyBoxYm, skyBoxZp, skyBoxZm];
-      runDemo(vertShader, fragShader, model, texture, specMap, normMap, skyBox);})
+      runDemo(vertShader, fragShader, model, specMap, normMap, skyBox);})
     .catch(function (err) {console.error(err);});
 }
 
-function runDemo(vertexShaderText, fragmentShaderText, model, texture, specMap, normMap, skyBox){
+function runDemo(vertexShaderText, fragmentShaderText, model, specMap, normMap, skyBox){
   console.log('Working');
   
   const canvas = document.getElementById('renderCanvas');
@@ -297,22 +268,17 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture, specMap, 
   gl.enableVertexAttribArray(texCoordAttribLocation); // Enables the attribute
   
   // Create texture
-  var earthTexture = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, earthTexture);
-  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texImage2D(
-    gl.TEXTURE_2D, // target (a 2D texture)
-    0,             // level (level 0 is the base image)
-    internalFormat,       // internal format 
-    gl.RGBA,       // format (in WebGL this needs to match the internal format)
-    gl.UNSIGNED_BYTE, // type (8 bits per channel for gl.SRGB)
-    texture  // pixels (HTMLImageElement)
-  );
-  gl.generateMipmap(gl.TEXTURE_2D);
+  var earthCubeMap = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthCubeMap);
+  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, skyBox[0]);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, skyBox[1]);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, skyBox[2]);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, skyBox[3]);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, skyBox[4]);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, skyBox[5]);
+  gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
   
   var earthSpec = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, earthSpec);
@@ -348,19 +314,6 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture, specMap, 
   );
   gl.generateMipmap(gl.TEXTURE_2D);
 
-  var earthCubeMap = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthCubeMap);
-  console.log(gl.MAX_CUBE_MAP_TEXTURE_SIZE);
-  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, skyBox[0]);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, skyBox[1]);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, skyBox[2]);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, skyBox[3]);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, skyBox[4]);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, skyBox[5]);
-  gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
-
   // Tells WebGL what program to use
   gl.useProgram(program);
 
@@ -369,20 +322,18 @@ function runDemo(vertexShaderText, fragmentShaderText, model, texture, specMap, 
   var earthTextLoc = gl.getUniformLocation(program, "samplerText");
   var earthSpecLoc = gl.getUniformLocation(program, "samplerSpec");
   var earthNormLoc = gl.getUniformLocation(program, "samplerNorm");
-  var skyLoc       = gl.getUniformLocation(program, "samplerSky");
+//  var skyLoc       = gl.getUniformLocation(program, "samplerSky");
   gl.uniform1i(earthTextLoc, 0);
   gl.uniform1i(earthSpecLoc, 1);
   gl.uniform1i(earthNormLoc, 2);
-  gl.uniform1i(skyLoc      , 3);
+//  gl.uniform1i(skyLoc      , 3);
 
   gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(gl.TEXTURE_2D, earthTexture);
+  gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthCubeMap);
   gl.activeTexture(gl.TEXTURE1);
   gl.bindTexture(gl.TEXTURE_2D, earthSpec);
   gl.activeTexture(gl.TEXTURE2);
   gl.bindTexture(gl.TEXTURE_2D, earthNorm);
-  gl.activeTexture(gl.TEXTURE3);
-  gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthCubeMap);
 
   // Matrices
   var viewPositionLocation    = gl.getUniformLocation(program, 'viewPos');

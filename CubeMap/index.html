@@ -47,18 +47,18 @@
     <table>
       <tr>
         <td></td>
-        <td><a id="yPlusLink"  download><img id="yPlus"> </a></td>
+        <td><a id="posYLink" download><img id="posY"></a></td>
         <td></td><td></td>
       </tr>
       <tr>
-        <td><a id="xPlusLink"  download><img id="xPlus"> </a></td>
-        <td><a id="zPlusLink"  download><img id="zPlus"> </a></td>
-        <td><a id="xMinusLink" download><img id="xMinus"></a></td>
-        <td><a id="zMinusLink" download><img id="zMinus"></a></td>
+        <td><a id="negXLink" download><img id="negX"></a></td>
+        <td><a id="posZLink" download><img id="posZ"></a></td>
+        <td><a id="posXLink" download><img id="posX"></a></td>
+        <td><a id="negZLink" download><img id="negZ"></a></td>
       </tr>
       <tr>
         <td></td>
-        <td><a id="yMinusLink"  download><img id="yMinus"> </a></td>
+        <td><a id="negYLink" download><img id="negY"></a></td>
         <td></td><td></td>
       </tr>
     </table>
@@ -251,35 +251,35 @@ function convertUVMapToCubeMap(){
 
   var uvToNorm = [
     // X+
-    [ 0,  0,  1,
+    [ 0,  0, -1,
       0,  1,  0,
       1,  0,  0],
     // X-
-    [ 0,  0, -1,
+    [ 0,  0,  1,
       0,  1,  0,
-      -1,  0,  0],
+     -1,  0,  0],
     // Y+
-    [-1,  0,  0,
+    [ 1,  0,  0,
       0,  0, -1,
       0,  1,  0],
     // Y-
-    [-1,  0,  0,
+    [ 1,  0,  0,
       0,  0,  1,
       0, -1,  0],
     // Z+
-    [-1,  0,  0,
+    [ 1,  0,  0,
       0,  1,  0,
       0,  0,  1],
     // Z-
-    [ 1,  0,  0,
+    [-1,  0,  0,
       0,  1,  0,
       0,  0, -1]
   ];
 
   var cubeFaceNames = [
-    'xPlus', 'xMinus',
-    'yPlus', 'yMinus',
-    'zPlus', 'zMinus',
+    'posX', 'negX',
+    'posY', 'negY',
+    'posZ', 'negZ',
   ];
 
   // Set uniforms (shader constants)
@@ -322,10 +322,10 @@ function convertUVMapToCubeMap(){
     // Set download link
     var faceImage     = document.getElementById(cubeFaceNames[i]);
     var downloadLink  = document.getElementById(cubeFaceNames[i] + 'Link');
-    var imageData     = canvas.toDataURL('image/jpeg', 1.0);
+    var imageData     = canvas.toDataURL();
     faceImage.src     = imageData;
     downloadLink.href = imageData;
-    downloadLink.download = cubeFaceNames[i] + '.jpg';
+    downloadLink.download = cubeFaceNames[i] + '.png';
   }
 }
 window.onload = main;
