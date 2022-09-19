@@ -1,7 +1,5 @@
 // fragment shader
 
-#define GAMMA 2.2
-
 precision mediump float;
 
 struct DirectionalLight{
@@ -48,11 +46,7 @@ void main(){
   vec3 surfaceNorm   = normalize(tanSpace * texelNorm);
   vec3 reflectedRay  = reflect(-normSunDir, surfaceNorm);
   
-//  vec4 texel = texture2D(samplerText, fragTexCoord);
   vec4 texel = textureCube(samplerText, fragTexCoord3);
-  #if Convert_sRGB_to_Lin
-  texel = texel * texel;
-  #endif
 
   vec4 texelSpec = textureCube(samplerSpec, fragTexCoord3);
   

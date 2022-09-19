@@ -41,8 +41,11 @@ async function loadCubemap(url, ext) {
   return faces;
 }
 
-function shaderProgram(gl, vertexShaderText, fragmentShaderText){
+async function createLinkedProgram(gl,  vertexShaderURL, fragmentShaderURL){
 
+  var vertexShaderText   = loadText(vertexShaderURL);
+  var fragmentShaderText = loadText(fragmentShaderURL);
+  
   var program = gl.createProgram();
 
   // Create Blank Shaders Object
@@ -50,8 +53,8 @@ function shaderProgram(gl, vertexShaderText, fragmentShaderText){
   var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
   
   // Set shader source code
-  gl.shaderSource(vertexShader,   vertexShaderText);
-  gl.shaderSource(fragmentShader, fragmentShaderText);
+  gl.shaderSource(vertexShader,   await vertexShaderText);
+  gl.shaderSource(fragmentShader, await fragmentShaderText);
   
   // Compiler shader with source code
   gl.compileShader(vertexShader);

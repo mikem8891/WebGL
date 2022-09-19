@@ -90,17 +90,7 @@ function runDemo(){
   }
   
   // asynchonously link the shaders to the program
-  var linkedProgramPromise = Promise.all([
-    loadText('Demo_8/vshader.glsl'),
-    loadText('Demo_8/fshader.glsl')
-  ]).then(function ([vertexShaderText, fragmentShaderText]){
-    if (context == 'webgl2'){
-      fragmentShaderText = '#define Convert_sRGB_to_Lin 0 \n' + fragmentShaderText;
-    } else {
-      fragmentShaderText = '#define Convert_sRGB_to_Lin 1 \n' + fragmentShaderText;
-    }
-    return shaderProgram(gl, vertexShaderText, fragmentShaderText);
-  }).catch(function (err) {console.error(err);});
+  var linkedProgramPromise = createLinkedProgram(gl, 'Demo_8/vshader.glsl', 'Demo_8/fshader.glsl');
   
   // Clears the canvas
   gl.clearColor(0.05, 0.05, 0.05, 1.00);
@@ -229,11 +219,22 @@ function runDemo(){
   }).catch(function (err) {console.error(err);});
   
 
-  // Create texture
-  var earthCubeMapPromise = loadCubemap('Earth/True_Color/Cube/').then(function(texture){
-    var earthCubeMap = gl.createTexture();
+  // Create blank textures
+  var earthCubeMap = gl.createTexture();
+  var earthSpec    = gl.createTexture();
+  var earthNorm    = gl.createTexture();
+
+  // bind textures
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthCubeMap);
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthSpec);
+  gl.activeTexture(gl.TEXTURE2);
+  gl.bindTexture(gl.TEXTURE_2D, earthNorm);
+
+
+  loadCubemap('Earth/True_Color/Cube/').then(function(texture){
     gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthCubeMap);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, texture[0]);
@@ -245,21 +246,9 @@ function runDemo(){
     gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
     return earthCubeMap;
   }).catch(function (err) {console.error(err);});
-
-  Promise.all([linkedProgramPromise, earthCubeMapPromise])
-    .then(function([program, earthCubeMap]){
-      // Tells WebGL what program to use
-      gl.useProgram(program);
-      var earthTextLoc = gl.getUniformLocation(program, "samplerText");
-      gl.uniform1i(earthTextLoc, 0);
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthCubeMap);
-    }).catch(function (err) {console.error(err);});
   
-  var earthSpecPromise = loadCubemap('Earth/Specular/Cube/').then(function(specMap){
-    var earthSpec = gl.createTexture();
+  loadCubemap('Earth/Specular/Cube/').then(function(specMap){
     gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthSpec);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, specMap[0]);
@@ -272,19 +261,8 @@ function runDemo(){
     return earthSpec;
   }).catch(function (err) {console.error(err);});
 
-  Promise.all([linkedProgramPromise, earthSpecPromise]).then(function([program, earthSpec]){
-    gl.useProgram(program);
-    var earthSpecLoc = gl.getUniformLocation(program, "samplerSpec");
-    gl.uniform1i(earthSpecLoc, 1);
-    gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthSpec);
-  }).catch(function (err) {console.error(err);});
-
-  Promise.all([linkedProgramPromise, loadImage('Earth/earth_normMap.png')]).then(function([program, normMap]){
-    gl.useProgram(program);
-    var earthNorm = gl.createTexture();
+  loadImage('Earth/earth_normMap.png').then(function(normMap){
     gl.activeTexture(gl.TEXTURE2);
-    gl.bindTexture(gl.TEXTURE_2D, earthNorm);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
@@ -299,8 +277,6 @@ function runDemo(){
       normMap  // pixels (HTMLImageElement)
     );
     gl.generateMipmap(gl.TEXTURE_2D);
-    var earthNormLoc = gl.getUniformLocation(program, "samplerNorm");
-    gl.uniform1i(earthNormLoc, 2);
   }).catch(function (err) {console.error(err);});
 
   Promise.all([
@@ -310,6 +286,13 @@ function runDemo(){
     // Tells WebGL what program to use
     gl.useProgram(program);
 
+    var earthTextLoc = gl.getUniformLocation(program, "samplerText");
+    var earthSpecLoc = gl.getUniformLocation(program, "samplerSpec");
+    var earthNormLoc = gl.getUniformLocation(program, "samplerNorm");
+    gl.uniform1i(earthTextLoc, 0);
+    gl.uniform1i(earthSpecLoc, 1);
+    gl.uniform1i(earthNormLoc, 2);
+    
     // Matrices
     var viewPositionLocation    = gl.getUniformLocation(program, 'viewPos');
     var matWorldUniformLocation = gl.getUniformLocation(program, 'mWorld'); 
