@@ -40,3 +40,50 @@ async function loadCubemap(url, ext) {
   ]);
   return faces;
 }
+
+function shaderProgram(gl, vertexShaderText, fragmentShaderText){
+
+  var program = gl.createProgram();
+
+  // Create Blank Shaders Object
+  var vertexShader   = gl.createShader(gl.VERTEX_SHADER);
+  var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+  
+  // Set shader source code
+  gl.shaderSource(vertexShader,   vertexShaderText);
+  gl.shaderSource(fragmentShader, fragmentShaderText);
+  
+  // Compiler shader with source code
+  gl.compileShader(vertexShader);
+  gl.compileShader(fragmentShader);
+  
+  // Check for compilation errors
+  if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)){
+    alert('ERROR compiling vertex shader!', 
+                  gl.getShaderInfoLog(vertexShader));
+    return;
+  }
+  if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)){
+    alert('ERROR compiling fragment shader!\n' + gl.getShaderInfoLog(fragmentShader));
+    return;
+  }
+  
+  // Create and link the program to run the shaders
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
+  
+  // Check for errors
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)){
+    alert('ERROR linking program\n' + 
+                  gl.getProgramInfoLog(program));
+    return;
+  }
+  gl.validateProgram(program);
+  if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)){
+    alert('ERROR validating program', 
+                  gl.getProgramInfoLog(program));
+    return;
+  }
+  return program;
+}
