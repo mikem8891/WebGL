@@ -56,18 +56,10 @@ function main(){
 }
 
 function loadAssets(){  
-  Promise.all([
-    loadCubemap('Earth/True_Color/Cube/'),
-    loadCubemap('Earth/Specular/Cube/'),
-    loadImage('Earth/earth_normMap.png')
-  ]).then(function ([texture, specMap, normMap]) {
-      runDemo(texture, specMap, normMap);})
-    .catch(function (err) {console.error(err);});
+  runDemo();
 }
 
-
-
-function runDemo(texture, specMap, normMap){
+function runDemo(){
   console.log('Working');
   
   const canvas = document.getElementById('renderCanvas');
@@ -237,48 +229,79 @@ function runDemo(texture, specMap, normMap){
   }).catch(function (err) {console.error(err);});
   
 
-  
   // Create texture
-  var earthCubeMap = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthCubeMap);
-  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, texture[0]);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, texture[1]);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, texture[2]);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, texture[3]);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, texture[4]);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, texture[5]);
-  gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
-  
-  var earthSpec = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthSpec);
-  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, specMap[0]);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, specMap[1]);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, specMap[2]);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, specMap[3]);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, specMap[4]);
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, specMap[5]);
-  gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
+  var earthCubeMapPromise = loadCubemap('Earth/True_Color/Cube/').then(function(texture){
+    var earthCubeMap = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthCubeMap);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, texture[0]);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, texture[1]);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, texture[2]);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, texture[3]);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, texture[4]);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, texture[5]);
+    gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
+    return earthCubeMap;
+  }).catch(function (err) {console.error(err);});
 
-  var earthNorm = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, earthNorm);
-  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texImage2D(
-    gl.TEXTURE_2D, // target (a 2D texture)
-    0,             // level (level 0 is the base image)
-    gl.RGBA,       // internal format 
-    gl.RGBA,       // format (in WebGL this needs to match the internal format)
-    gl.UNSIGNED_BYTE, // type (8 bits)
-    normMap  // pixels (HTMLImageElement)
-  );
-  gl.generateMipmap(gl.TEXTURE_2D);
+  Promise.all([linkedProgramPromise, earthCubeMapPromise])
+    .then(function([program, earthCubeMap]){
+      // Tells WebGL what program to use
+      gl.useProgram(program);
+      var earthTextLoc = gl.getUniformLocation(program, "samplerText");
+      gl.uniform1i(earthTextLoc, 0);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthCubeMap);
+    }).catch(function (err) {console.error(err);});
+  
+  var earthSpecPromise = loadCubemap('Earth/Specular/Cube/').then(function(specMap){
+    var earthSpec = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthSpec);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, specMap[0]);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, specMap[1]);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, specMap[2]);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, specMap[3]);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, specMap[4]);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, specMap[5]);
+    gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
+    return earthSpec;
+  }).catch(function (err) {console.error(err);});
+
+  Promise.all([linkedProgramPromise, earthSpecPromise]).then(function([program, earthSpec]){
+    gl.useProgram(program);
+    var earthSpecLoc = gl.getUniformLocation(program, "samplerSpec");
+    gl.uniform1i(earthSpecLoc, 1);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthSpec);
+  }).catch(function (err) {console.error(err);});
+
+  Promise.all([linkedProgramPromise, loadImage('Earth/earth_normMap.png')]).then(function([program, normMap]){
+    gl.useProgram(program);
+    var earthNorm = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, earthNorm);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texImage2D(
+      gl.TEXTURE_2D, // target (a 2D texture)
+      0,             // level (level 0 is the base image)
+      gl.RGBA,       // internal format 
+      gl.RGBA,       // format (in WebGL this needs to match the internal format)
+      gl.UNSIGNED_BYTE, // type (8 bits)
+      normMap  // pixels (HTMLImageElement)
+    );
+    gl.generateMipmap(gl.TEXTURE_2D);
+    var earthNormLoc = gl.getUniformLocation(program, "samplerNorm");
+    gl.uniform1i(earthNormLoc, 2);
+  }).catch(function (err) {console.error(err);});
 
   Promise.all([
     linkedProgramPromise,
@@ -286,24 +309,6 @@ function runDemo(texture, specMap, normMap){
   ]).then(function([program, earthIndices]){
     // Tells WebGL what program to use
     gl.useProgram(program);
-
-    // Set uniforms (shader constants)
-    // Textures
-    var earthTextLoc = gl.getUniformLocation(program, "samplerText");
-    var earthSpecLoc = gl.getUniformLocation(program, "samplerSpec");
-    var earthNormLoc = gl.getUniformLocation(program, "samplerNorm");
-  //  var skyLoc       = gl.getUniformLocation(program, "samplerSky");
-    gl.uniform1i(earthTextLoc, 0);
-    gl.uniform1i(earthSpecLoc, 1);
-    gl.uniform1i(earthNormLoc, 2);
-  //  gl.uniform1i(skyLoc      , 3);
-
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthCubeMap);
-    gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthSpec);
-    gl.activeTexture(gl.TEXTURE2);
-    gl.bindTexture(gl.TEXTURE_2D, earthNorm);
 
     // Matrices
     var viewPositionLocation    = gl.getUniformLocation(program, 'viewPos');
@@ -382,7 +387,7 @@ function runDemo(texture, specMap, normMap){
       requestAnimationFrame(loop); // loop is called when a frame is requested
     }
     requestAnimationFrame(loop);
-    
+
   }).catch(function (err) {console.error(err);});
 }
 
