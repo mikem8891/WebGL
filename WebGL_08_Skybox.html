@@ -51,15 +51,11 @@
 <script>
 
 function main(){
-  // load files and run the demo
+  // load files and runs the demo
   loadAssets();
 }
 
-function loadAssets(){  
-  runDemo();
-}
-
-function runDemo(){
+function loadAssets(){
   console.log('Working');
   
   const canvas = document.getElementById('renderCanvas');
@@ -90,7 +86,7 @@ function runDemo(){
   }
   
   // asynchonously link the shaders to the program
-  var linkedProgramPromise = createLinkedProgram(gl, 'Demo_8/vshader.glsl', 'Demo_8/fshader.glsl');
+  var programPromise = createLinkedProgram(gl, 'Demo_8/vshader.glsl', 'Demo_8/fshader.glsl');
   
   // Clears the canvas
   gl.clearColor(0.05, 0.05, 0.05, 1.00);
@@ -108,116 +104,7 @@ function runDemo(){
   gl.enable(gl.DEPTH_TEST);
   
   // asynchonously load the model into the program
-  var earthModelPromise = Promise.all([
-    loadJSON('sphere.json'),
-    linkedProgramPromise
-  ]).then(function ([model, program]){
-    // Specify vertices
-    // Typically this is 'model.meshes[i].vertices' in a JSON model;
-    var earthVertices = model.meshes[0].vertices;
-    
-    // Specify normals
-    // Typically this is 'model.meshes[i].normals' in a JSON model;
-    var earthNormals    = model.meshes[0].normals;
-    var earthTangents   = model.meshes[0].tangents;
-    var earthBitangents = model.meshes[0].bitangents;
-    
-    // Specify the texture coordinates
-    // Typically this is 'model.meshes[i].texturecoords[j]' in a JSON model;
-    var earthTexCoords = model.meshes[0].texturecoords[0];
-    
-    // Specify the indices for each face
-    // Typically this is '[].concat.apply([], model.meshes[i].faces)' in a JSON model;
-    var earthIndices = [].concat.apply([], model.meshes[0].faces);
-    
-    // Create buffers
-    // Set Attributes (shader inputs)
-    var earthVertexBufferObject = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, earthVertexBufferObject);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(earthVertices), gl.STATIC_DRAW);
-    
-    var earthTexCoordBufferObject = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, earthTexCoordBufferObject);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(earthTexCoords), gl.STATIC_DRAW);
-    
-    var earthNormBufferObject = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, earthNormBufferObject);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(earthNormals), gl.STATIC_DRAW);
-    var earthTanBufferObject = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, earthTanBufferObject);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(earthTangents), gl.STATIC_DRAW);
-    var earthBitanBufferObject = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, earthBitanBufferObject);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(earthBitangents), gl.STATIC_DRAW);
-    
-    var earthIndexBufferObject = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, earthIndexBufferObject);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(earthIndices), gl.STATIC_DRAW);
-    
-    gl.bindBuffer(gl.ARRAY_BUFFER, earthVertexBufferObject);
-    var positionAttribLocation = gl.getAttribLocation(program, 'vertPosition'); 
-    gl.vertexAttribPointer(
-      positionAttribLocation,  // Attribute location 
-      3,                       // Number of elements per attribute (X, Y, Z)
-      gl.FLOAT,                // Data type of the elements
-      gl.FALSE,                // Whether the elements are normalized
-      3 * Float32Array.BYTES_PER_ELEMENT,  // Size of an individual vertex
-      0  // Offset from the beginning of a single vertex to this attribute
-    );
-    gl.enableVertexAttribArray(positionAttribLocation); // Enables the attribute
-    
-    gl.bindBuffer(gl.ARRAY_BUFFER, earthNormBufferObject);
-    var normalAttribLocation = gl.getAttribLocation(program, 'vertNormal'); 
-    gl.vertexAttribPointer(
-      normalAttribLocation,  // Attribute location 
-      3,                     // Number of elements per attribute (X, Y, Z)
-      gl.FLOAT,              // Data type of the elements
-      gl.TRUE,               // Whether the elements are normalized
-      3 * Float32Array.BYTES_PER_ELEMENT,  // Size of an individual vertex
-      0  // Offset from the beginning of a single vertex to this attribute
-    );
-    gl.enableVertexAttribArray(normalAttribLocation); // Enables the attribute
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, earthTanBufferObject);
-    var tangentAttribLocation = gl.getAttribLocation(program, 'vertTangent'); 
-    gl.vertexAttribPointer(
-      tangentAttribLocation,  // Attribute location 
-      3,                     // Number of elements per attribute (X, Y, Z)
-      gl.FLOAT,              // Data type of the elements
-      gl.TRUE,               // Whether the elements are normalized
-      3 * Float32Array.BYTES_PER_ELEMENT,  // Size of an individual vertex
-      0  // Offset from the beginning of a single vertex to this attribute
-    );
-    gl.enableVertexAttribArray(tangentAttribLocation); // Enables the attribute
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, earthNormBufferObject);
-    var bitanAttribLocation = gl.getAttribLocation(program, 'vertBitan'); 
-    gl.vertexAttribPointer(
-      bitanAttribLocation,  // Attribute location 
-      3,                     // Number of elements per attribute (X, Y, Z)
-      gl.FLOAT,              // Data type of the elements
-      gl.TRUE,               // Whether the elements are normalized
-      3 * Float32Array.BYTES_PER_ELEMENT,  // Size of an individual vertex
-      0  // Offset from the beginning of a single vertex to this attribute
-    );
-    gl.enableVertexAttribArray(bitanAttribLocation); // Enables the attribute
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, earthTexCoordBufferObject);
-    var texCoordAttribLocation = gl.getAttribLocation(program, 'vertTexCoord'); 
-    gl.vertexAttribPointer(
-      texCoordAttribLocation,  // Attribute location 
-      2,                       // Number of elements per attribute (S, T)
-      gl.FLOAT,                // Data type of the elements
-      gl.FALSE,                // Whether the elements are normalized
-      2 * Float32Array.BYTES_PER_ELEMENT,  // Size of an individual vertex
-      0 // Offset from the beginning of a single vertex to this attribute
-    );
-    gl.enableVertexAttribArray(texCoordAttribLocation); // Enables the attribute
-    
-    return earthIndices;
-
-  }).catch(function (err) {console.error(err);});
-  
+  var earthModelPromise = loadEarthModel(gl, programPromise, 'sphere.json');
 
   // Create blank textures
   var earthCubeMap = gl.createTexture();
@@ -230,10 +117,11 @@ function runDemo(){
   gl.activeTexture(gl.TEXTURE1);
   gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthSpec);
   gl.activeTexture(gl.TEXTURE2);
-  gl.bindTexture(gl.TEXTURE_2D, earthNorm);
+  gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthNorm);
 
 
   loadCubemap('Earth/True_Color/Cube/').then(function(texture){
+    console.log('Earth texture loaded @:', performance.now());
     gl.activeTexture(gl.TEXTURE0);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -244,10 +132,10 @@ function runDemo(){
     gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, texture[4]);
     gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, internalFormat, gl.RGBA, gl.UNSIGNED_BYTE, texture[5]);
     gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
-    return earthCubeMap;
   }).catch(function (err) {console.error(err);});
   
   loadCubemap('Earth/Specular/Cube/').then(function(specMap){
+    console.log('Earth specular map loaded @:', performance.now());
     gl.activeTexture(gl.TEXTURE1);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -258,120 +146,234 @@ function runDemo(){
     gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, specMap[4]);
     gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, specMap[5]);
     gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
-    return earthSpec;
   }).catch(function (err) {console.error(err);});
 
-  loadImage('Earth/earth_normMap.png').then(function(normMap){
+  loadCubemap('Earth/Normals/Cube/').then(function(normMap){
+    console.log('Earth normal map loaded @:', performance.now());
     gl.activeTexture(gl.TEXTURE2);
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texImage2D(
-      gl.TEXTURE_2D, // target (a 2D texture)
-      0,             // level (level 0 is the base image)
-      gl.RGBA,       // internal format 
-      gl.RGBA,       // format (in WebGL this needs to match the internal format)
-      gl.UNSIGNED_BYTE, // type (8 bits)
-      normMap  // pixels (HTMLImageElement)
-    );
-    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, normMap[0]);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, normMap[1]);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, normMap[2]);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, normMap[3]);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, normMap[4]);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, normMap[5]);
+    gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
   }).catch(function (err) {console.error(err);});
 
-  Promise.all([
-    linkedProgramPromise,
-    earthModelPromise
-  ]).then(function([program, earthIndices]){
-    // Tells WebGL what program to use
-    gl.useProgram(program);
+  runDemo(gl, programPromise, earthModelPromise);
+}
 
-    var earthTextLoc = gl.getUniformLocation(program, "samplerText");
-    var earthSpecLoc = gl.getUniformLocation(program, "samplerSpec");
-    var earthNormLoc = gl.getUniformLocation(program, "samplerNorm");
-    gl.uniform1i(earthTextLoc, 0);
-    gl.uniform1i(earthSpecLoc, 1);
-    gl.uniform1i(earthNormLoc, 2);
-    
-    // Matrices
-    var viewPositionLocation    = gl.getUniformLocation(program, 'viewPos');
-    var matWorldUniformLocation = gl.getUniformLocation(program, 'mWorld'); 
-    var matViewUniformLocation  = gl.getUniformLocation(program, 'mView'); 
-    var matProjUniformLocation  = gl.getUniformLocation(program, 'mProj');
-    
-    var viewPosition = [0, -5, 0];
-    var matWorld = new Float32Array(16);
-    var matView  = new Float32Array(16);
-    var matProj  = new Float32Array(16);
-    glMatrix.mat4.identity(matWorld);
-    glMatrix.mat4.lookAt(matView, viewPosition, [0, 0, 0], [0, 0, 1]);
-    glMatrix.mat4.perspective(matProj, glMatrix.glMatrix.toRadian(30), canvas.width / canvas.height, 0.1, 1000);
-    
-    gl.uniform3fv(viewPositionLocation, new Float32Array(viewPosition));
-    gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, matWorld);
-    gl.uniformMatrix4fv(matViewUniformLocation,  gl.FALSE, matView);
-    gl.uniformMatrix4fv(matProjUniformLocation,  gl.FALSE, matProj);
-    
-    // Lighting information
-    gl.useProgram(program);
-    var ambLightIntUniformLocation = gl.getUniformLocation(program, 'ambLightInt'); 
-    var sunlightIntUniformLocation = gl.getUniformLocation(program, 'sun.color'); 
-    var sunlightDirUniformLocation = gl.getUniformLocation(program, 'sun.direction'); 
-    
-    gl.uniform3f(ambLightIntUniformLocation,  0.01,  0.01,  0.01);
-    gl.uniform3f(sunlightIntUniformLocation,   1.0,   1.0,   1.0);
-    gl.uniform3f(sunlightDirUniformLocation,   4.0,  -3.0,   0.0);
-    
-    // Main render loop for something like a game in JS (just for info)
-    /*
-    var loop = function () {
-      updateWorld();
-      renderWorld();
-      if (running)
-        requestAnimationFrame(loop);
-    }
-    requestAnimationFrame(loop);
-    */
-    
-    // Our main render loop
-    
-    var identityMatrix = new Float32Array(16);
-    var xRotMat        = new Float32Array(16);
-    var zRotMat        = new Float32Array(16);
-    glMatrix.mat4.identity(identityMatrix);
-    var ang = 0;
-    function loop(){
-      // rotates the earth
-      ang = performance.now() / 1000 / 20 * 2 * Math.PI;
-      glMatrix.mat4.rotate(zRotMat, identityMatrix, ang,   [0, 0, 1]);
-      glMatrix.mat4.rotate(xRotMat, identityMatrix, Math.PI/3*Math.sin(ang/3), [1, 0, 0]);
-      glMatrix.mat4.mul(matWorld, xRotMat, zRotMat);
-      gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, matWorld)
+async function loadEarthModel(gl, programPromise, url){
 
-      // Resize canvas
-      var resized = resizeCanvas(gl);
-      if (resized) {
-        var minFOV = glMatrix.glMatrix.toRadian(30);
-        var vertFOV = minFOV;
-        if (canvas.height > canvas.width) {
-          var distFOV = canvas.width / Math.tan(minFOV);
-          vertFOV = Math.atan(canvas.height / distFOV);
-        }
-        glMatrix.mat4.perspective(matProj, vertFOV, canvas.width / canvas.height, 0.1, 1000);
+  var earth = {};
+
+  // Load json from url
+  model = await loadJSON(url);
+  console.log('JSON model loaded @:', performance.now());
+
+  // Typically this is 'model.meshes[i].vertices' in a JSON model;
+  earth.vertices = model.meshes[0].vertices;
+  
+  // Specify normals
+  // Typically this is 'model.meshes[i].normals' in a JSON model;
+  earth.normals    = model.meshes[0].normals;
+  earth.tangents   = model.meshes[0].tangents;
+  earth.bitangents = model.meshes[0].bitangents;
+  
+  // Specify the texture coordinates
+  // Typically this is 'model.meshes[i].texturecoords[j]' in a JSON model;
+  earth.texCoords = model.meshes[0].texturecoords[0];
+  
+  // Specify the indices for each face
+  // Typically this is '[].concat.apply([], model.meshes[i].faces)' in a JSON model;
+  earth.indices = [].concat.apply([], model.meshes[0].faces);
+  
+  // Create buffers
+  // Set Attributes (shader inputs)
+  var earthVertexBufferObject = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, earthVertexBufferObject);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(earth.vertices), gl.STATIC_DRAW);
+  
+  var earthTexCoordBufferObject = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, earthTexCoordBufferObject);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(earth.texCoords), gl.STATIC_DRAW);
+  
+  var earthNormBufferObject = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, earthNormBufferObject);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(earth.normals), gl.STATIC_DRAW);
+  var earthTanBufferObject = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, earthTanBufferObject);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(earth.tangents), gl.STATIC_DRAW);
+  var earthBitanBufferObject = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, earthBitanBufferObject);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(earth.bitangents), gl.STATIC_DRAW);
+  
+  var earthIndexBufferObject = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, earthIndexBufferObject);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(earth.indices), gl.STATIC_DRAW);
+  
+  program = await programPromise;
+  
+  gl.bindBuffer(gl.ARRAY_BUFFER, earthVertexBufferObject);
+  var positionAttribLocation = gl.getAttribLocation(program, 'vertPosition'); 
+  gl.vertexAttribPointer(
+    positionAttribLocation,  // Attribute location 
+    3,                       // Number of elements per attribute (X, Y, Z)
+    gl.FLOAT,                // Data type of the elements
+    gl.FALSE,                // Whether the elements are normalized
+    3 * Float32Array.BYTES_PER_ELEMENT,  // Size of an individual vertex
+    0  // Offset from the beginning of a single vertex to this attribute
+  );
+  gl.enableVertexAttribArray(positionAttribLocation); // Enables the attribute
+  
+  gl.bindBuffer(gl.ARRAY_BUFFER, earthNormBufferObject);
+  var normalAttribLocation = gl.getAttribLocation(program, 'vertNormal'); 
+  gl.vertexAttribPointer(
+    normalAttribLocation,  // Attribute location 
+    3,                     // Number of elements per attribute (X, Y, Z)
+    gl.FLOAT,              // Data type of the elements
+    gl.TRUE,               // Whether the elements are normalized
+    3 * Float32Array.BYTES_PER_ELEMENT,  // Size of an individual vertex
+    0  // Offset from the beginning of a single vertex to this attribute
+  );
+  gl.enableVertexAttribArray(normalAttribLocation); // Enables the attribute
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, earthTanBufferObject);
+  var tangentAttribLocation = gl.getAttribLocation(program, 'vertTangent'); 
+  gl.vertexAttribPointer(
+    tangentAttribLocation,  // Attribute location 
+    3,                     // Number of elements per attribute (X, Y, Z)
+    gl.FLOAT,              // Data type of the elements
+    gl.TRUE,               // Whether the elements are normalized
+    3 * Float32Array.BYTES_PER_ELEMENT,  // Size of an individual vertex
+    0  // Offset from the beginning of a single vertex to this attribute
+  );
+  gl.enableVertexAttribArray(tangentAttribLocation); // Enables the attribute
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, earthNormBufferObject);
+  var bitanAttribLocation = gl.getAttribLocation(program, 'vertBitan'); 
+  gl.vertexAttribPointer(
+    bitanAttribLocation,  // Attribute location 
+    3,                     // Number of elements per attribute (X, Y, Z)
+    gl.FLOAT,              // Data type of the elements
+    gl.TRUE,               // Whether the elements are normalized
+    3 * Float32Array.BYTES_PER_ELEMENT,  // Size of an individual vertex
+    0  // Offset from the beginning of a single vertex to this attribute
+  );
+  gl.enableVertexAttribArray(bitanAttribLocation); // Enables the attribute
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, earthTexCoordBufferObject);
+  var texCoordAttribLocation = gl.getAttribLocation(program, 'vertTexCoord'); 
+  gl.vertexAttribPointer(
+    texCoordAttribLocation,  // Attribute location 
+    2,                       // Number of elements per attribute (S, T)
+    gl.FLOAT,                // Data type of the elements
+    gl.FALSE,                // Whether the elements are normalized
+    2 * Float32Array.BYTES_PER_ELEMENT,  // Size of an individual vertex
+    0 // Offset from the beginning of a single vertex to this attribute
+  );
+  gl.enableVertexAttribArray(texCoordAttribLocation); // Enables the attribute
+  
+  return earth;
+}
+
+async function runDemo(gl, programPromise, earthModelPromise){
+
+  var canvas  = gl.canvas;
+
+  program = await programPromise;
+
+  // Tells WebGL what program to use
+  gl.useProgram(program);
+
+  var earthTextLoc = gl.getUniformLocation(program, "samplerText");
+  var earthSpecLoc = gl.getUniformLocation(program, "samplerSpec");
+  var earthNormLoc = gl.getUniformLocation(program, "samplerNorm");
+  gl.uniform1i(earthTextLoc, 0);
+  gl.uniform1i(earthSpecLoc, 1);
+  gl.uniform1i(earthNormLoc, 2);
+  
+  // Matrices
+  var viewPositionLocation    = gl.getUniformLocation(program, 'viewPos');
+  var matWorldUniformLocation = gl.getUniformLocation(program, 'mWorld'); 
+  var matViewUniformLocation  = gl.getUniformLocation(program, 'mView'); 
+  var matProjUniformLocation  = gl.getUniformLocation(program, 'mProj');
+  
+  var viewPosition = [0, -5, 0];
+  var matWorld = new Float32Array(16);
+  var matView  = new Float32Array(16);
+  var matProj  = new Float32Array(16);
+  glMatrix.mat4.identity(matWorld);
+  glMatrix.mat4.lookAt(matView, viewPosition, [0, 0, 0], [0, 0, 1]);
+  glMatrix.mat4.perspective(matProj, glMatrix.glMatrix.toRadian(30), canvas.width / canvas.height, 0.1, 1000);
+  
+  gl.uniform3fv(viewPositionLocation, new Float32Array(viewPosition));
+  gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, matWorld);
+  gl.uniformMatrix4fv(matViewUniformLocation,  gl.FALSE, matView);
+  gl.uniformMatrix4fv(matProjUniformLocation,  gl.FALSE, matProj);
+  
+  // Lighting information
+  gl.useProgram(program);
+  var ambLightIntUniformLocation = gl.getUniformLocation(program, 'ambLightInt'); 
+  var sunlightIntUniformLocation = gl.getUniformLocation(program, 'sun.color'); 
+  var sunlightDirUniformLocation = gl.getUniformLocation(program, 'sun.direction'); 
+  
+  gl.uniform3f(ambLightIntUniformLocation,  0.01,  0.01,  0.01);
+  gl.uniform3f(sunlightIntUniformLocation,   1.0,   1.0,   1.0);
+  gl.uniform3f(sunlightDirUniformLocation,   4.0,  -3.0,   0.0);
+  
+  // Main render loop for something like a game in JS (just for info)
+  /*
+  var loop = function () {
+    updateWorld();
+    renderWorld();
+    if (running)
+      requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+  */
+  
+  // Our main render loop
+  
+  var identityMatrix = new Float32Array(16);
+  var xRotMat        = new Float32Array(16);
+  var zRotMat        = new Float32Array(16);
+  glMatrix.mat4.identity(identityMatrix);
+  var ang = 0;
+  var earth;
+  function loop(){
+    // rotates the earth
+    ang = performance.now() / 1000 / 20 * 2 * Math.PI;
+    glMatrix.mat4.rotate(zRotMat, identityMatrix, ang,   [0, 0, 1]);
+    glMatrix.mat4.rotate(xRotMat, identityMatrix, Math.PI/3*Math.sin(ang/3), [1, 0, 0]);
+    glMatrix.mat4.mul(matWorld, xRotMat, zRotMat);
+    gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, matWorld)
+
+    // Resize canvas
+    var resized = resizeCanvas(gl);
+    if (resized) {
+      var minFOV = glMatrix.glMatrix.toRadian(30);
+      var vertFOV = minFOV;
+      if (canvas.height > canvas.width) {
+        var distFOV = canvas.width / Math.tan(minFOV);
+        vertFOV = Math.atan(canvas.height / distFOV);
       }
-      gl.uniformMatrix4fv(matProjUniformLocation, gl.FALSE, matProj)
-
-      // Clears the canvas
-      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-      
-      gl.depthFunc(gl.LESS);
-      gl.drawElements(gl.TRIANGLES, earthIndices.length, gl.UNSIGNED_SHORT, 0);
-      
-      requestAnimationFrame(loop); // loop is called when a frame is requested
+      glMatrix.mat4.perspective(matProj, vertFOV, canvas.width / canvas.height, 0.1, 1000);
     }
-    requestAnimationFrame(loop);
+    gl.uniformMatrix4fv(matProjUniformLocation, gl.FALSE, matProj)
 
-  }).catch(function (err) {console.error(err);});
+    // Clears the canvas
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    
+    gl.depthFunc(gl.LESS);
+    gl.drawElements(gl.TRIANGLES, earth.indices.length, gl.UNSIGNED_SHORT, 0);
+    
+    requestAnimationFrame(loop); // loop is called when a frame is requested
+  }
+  earth = await earthModelPromise;
+  requestAnimationFrame(loop);
 }
 
 function resizeCanvas(gl) {
@@ -392,10 +394,6 @@ function resizeCanvas(gl) {
     return true;
   }
   return false;
-}
-
-function loadTextureToCubemap(gl, img){
-
 }
 
 window.onload = main;

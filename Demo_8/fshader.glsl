@@ -9,7 +9,7 @@ struct DirectionalLight{
 
 uniform samplerCube samplerText;
 uniform samplerCube samplerSpec;
-uniform sampler2D samplerNorm;
+uniform samplerCube samplerNorm;
 //uniform samplerCube samplerSky;
 uniform vec3 ambLightInt;
 uniform DirectionalLight sun;
@@ -38,9 +38,9 @@ vec4 LinearToSRGB(vec4 Lin){
 void main(){
   
   vec3 normSunDir    = normalize(sun.direction);
-  vec3 texelNorm     = 2.0 * texture2D(samplerNorm, fragTexCoord).rgb - 1.0;
+  vec3 texelNorm     = 2.0 * textureCube(samplerNorm, fragTexCoord3).rgb - 1.0;
   vec3 normFragNorm  = normalize(fragNormal);
-  vec3 normFragTan   = normalize(fragTangent - dot(normFragNorm, fragTangent));
+  vec3 normFragTan   = normalize(vec3(-fragNormal.y, fragNormal.x, 0));
   vec3 normFragBitan = cross(normFragNorm, normFragTan);
   mat3 tanSpace      = mat3(normFragTan, normFragBitan, normFragNorm);
   vec3 surfaceNorm   = normalize(tanSpace * texelNorm);

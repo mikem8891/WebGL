@@ -88,5 +88,6 @@ async function createLinkedProgram(gl,  vertexShaderURL, fragmentShaderURL){
                   gl.getProgramInfoLog(program));
     return;
   }
+  console.log('Program loaded @:', performance.now());
   return program;
 }
