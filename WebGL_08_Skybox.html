@@ -105,11 +105,13 @@ function loadAssets(){
   
   // asynchonously load the model into the program
   var earthModelPromise = loadEarthModel(gl, programPromise, 'sphere.json');
+  var skyScreen = loadSkyScreen(gl);
 
   // Create blank textures
   var earthCubeMap = gl.createTexture();
   var earthSpec    = gl.createTexture();
   var earthNorm    = gl.createTexture();
+  var starMap      = gl.createTexture();
 
   // bind textures
   gl.activeTexture(gl.TEXTURE0);
@@ -118,6 +120,8 @@ function loadAssets(){
   gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthSpec);
   gl.activeTexture(gl.TEXTURE2);
   gl.bindTexture(gl.TEXTURE_CUBE_MAP, earthNorm);
+  gl.activeTexture(gl.TEXTURE3);
+  gl.bindTexture(gl.TEXTURE_CUBE_MAP, starMap);
 
 
   loadCubemap('Earth/True_Color/Cube/').then(function(texture){
@@ -159,6 +163,20 @@ function loadAssets(){
     gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, normMap[3]);
     gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, normMap[4]);
     gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, normMap[5]);
+    gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
+  }).catch(function (err) {console.error(err);});
+
+  loadCubemap('Stars/all/Cube/').then(function(skyMap){
+    console.log('Star map loaded @:', performance.now());
+    gl.activeTexture(gl.TEXTURE3);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, skyMap[0]);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, skyMap[1]);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, skyMap[2]);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, skyMap[3]);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, skyMap[4]);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, skyMap[5]);
     gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
   }).catch(function (err) {console.error(err);});
 
@@ -277,6 +295,22 @@ async function loadEarthModel(gl, programPromise, url){
   gl.enableVertexAttribArray(texCoordAttribLocation); // Enables the attribute
   
   return earth;
+}
+
+async function loadSkyScreen(gl, skyboxProgramPromise){
+  var screen = [
+  // X,  Y,
+    -1,  1,
+    -1, -1,
+     1,  1,
+
+     1,  1,
+    -1, -1,
+     1, -1
+  ];
+
+  
+
 }
 
 async function runDemo(gl, programPromise, earthModelPromise){
