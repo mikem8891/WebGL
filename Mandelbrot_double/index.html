@@ -28,6 +28,7 @@ canvas{
 </body>
 <script>
 "use strict";
+const DEBUG = true; // debug mode
 const CANVAS = document.getElementById('renderCanvas');
 var gl;
 
@@ -115,11 +116,17 @@ function runDemo([mandelVS, mandelFS]){
   gl.useProgram(program);
   
   var uniforms = {
-    viewPortDims: gl.getUniformLocation(program, 'viewportDim'),
-            minR: gl.getUniformLocation(program, 'minR'),
-            maxR: gl.getUniformLocation(program, 'maxR'),
-            minI: gl.getUniformLocation(program, 'minI'),
-            maxI: gl.getUniformLocation(program, 'maxI')
+    viewPortDims:  gl.getUniformLocation(program, 'viewportDim'),
+            minR:  gl.getUniformLocation(program, 'minR'),
+            maxR:  gl.getUniformLocation(program, 'maxR'),
+            rngR:  gl.getUniformLocation(program, 'rngR'),
+            avgR:  gl.getUniformLocation(program, 'avgR'),
+            avgRe: gl.getUniformLocation(program, 'avgRe'),
+            minI:  gl.getUniformLocation(program, 'minI'),
+            maxI:  gl.getUniformLocation(program, 'maxI'),
+            rngI:  gl.getUniformLocation(program, 'rngI'),
+            avgI:  gl.getUniformLocation(program, 'avgI'),
+            avgIe: gl.getUniformLocation(program, 'avgIe')
   };
   
   var viewPortDims = [CANVAS.width, CANVAS.height];
@@ -127,6 +134,8 @@ function runDemo([mandelVS, mandelFS]){
   var maxR =  2.0;
   var minI = -2.0;
   var maxI =  2.0;
+  var rngR, avgR, avgRe;
+  var rngI, avgI, avgIe;
   
   var vertexBuffer = gl.createBuffer();
   var verts = [
@@ -184,11 +193,27 @@ function runDemo([mandelVS, mandelFS]){
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     
     // Set uniforms
+    var avgR64 = (maxR + minR)/2;
+    avgR = Math.fround(avgR64);
+    avgRe = avgR64 - avgR;
+    rngR = maxR - minR;
+
+    var avgI64 = (maxI + minI)/2;
+    avgI = Math.fround(avgI64);
+    avgIe = avgI64 - avgI;
+    rngI = maxI - minI;
+
     gl.uniform2fv(uniforms.viewPortDims, viewPortDims);
-    gl.uniform1f(uniforms.minR, minR);
-    gl.uniform1f(uniforms.maxR, maxR);
-    gl.uniform1f(uniforms.minI, minI);
-    gl.uniform1f(uniforms.maxI, maxI);
+    gl.uniform1f(uniforms.minR,  minR);
+    gl.uniform1f(uniforms.maxR,  maxR);
+    gl.uniform1f(uniforms.rngR,  rngR);
+    gl.uniform1f(uniforms.avgR,  avgR);
+    gl.uniform1f(uniforms.avgRe, avgRe);
+    gl.uniform1f(uniforms.minI,  minI);
+    gl.uniform1f(uniforms.maxI,  maxI);
+    gl.uniform1f(uniforms.rngI,  rngI);
+    gl.uniform1f(uniforms.avgI,  avgI);
+    gl.uniform1f(uniforms.avgIe, avgIe);
     
     gl.drawArrays(gl.TRIANGLES, 0, verts.length/2);
     
