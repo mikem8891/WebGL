@@ -15,39 +15,45 @@ uniform float maxI;
 uniform float rngI;
 uniform float avgI;
 uniform float avgIe;
+uniform float ZERO;
+uniform float ONE;
+
+float f(float a){ return ONE*a + ZERO; } // faux function to prevent compiler optimizations
+vec2 f(vec2 a){ return ONE*a + ZERO; } 
 
 vec2 dbit(vec2 a){
-  float cx = a.x + a.y;
-  float cy = (a.x - cx) + a.y;
+  float cx = f(a.x + a.y);
+  float cy = a.y - f(cx - a.x);
   return vec2(cx, cy);
 }
 
 vec2 dadd(vec2 a, vec2 b){
-  float cx = a.x + b.x; // Most significant bits
-  float cy = (a.x + (b.x - cx)) + (b.x + (a.x - cx)) + a.y + b.y; //Accounting for any error in cx and adding the least significant bits
+  float cx = f(a.x + b.x); // Most significant bits
+  float ce = f(cx - b.x);
+  float cy = f(a.x - ce) + f(b.x - f(cx - ce)) + a.y + b.y; //Accounting for any error in cx and adding the least significant bits
   return dbit(vec2(cx, cy));
 }
 
 vec2 dmul(vec2 a, vec2 b){
   float bit12 = 4096.0;     // Constant for shifting a value 12 bits
-  float a12x = bit12 * a.x; 
-  float b12x = bit12 * b.x;
-  float axx = (a.x + a12x) - a12x; // Truncates the 12 least sig bits in a.x
-  float bxx = (b.x + b12x) - b12x; // Truncates the 12 least sig bits in b.x
-  float axy = a.x - axx; // The 12 least sig bits in a.x
-  float bxy = b.x - bxx; // The 12 least sig bits in b.x
+  float a12x = f(bit12 * a.x); 
+  float b12x = f(bit12 * b.x);
+  float axx = f(a.x + a12x) - a12x; // Truncates the 12 least sig bits in a.x
+  float bxx = f(b.x + b12x) - b12x; // Truncates the 12 least sig bits in b.x
+  float axy = f(a.x - axx); // The 12 least sig bits in a.x
+  float bxy = f(b.x - bxx); // The 12 least sig bits in b.x
   float cx = a.x * b.x;  // Most significant bits of the result
-  float cy = ((axx * bxx - cx) + axx * bxy + axy * bxx) + axy * bxy + a.x * b.y + a.y * b.x;
+  float cy = f(f(axx * bxx - cx) + f(axx * bxy) + f(axy * bxx)) + f(axy * bxy) + f(a.x * b.y) + a.y * b.x;
   return vec2(cx, cy);
 }
 
 vec2 dsq(vec2 a){
   float bit12 = 4096.0;     // Constant for shifting a value 12 bits
-  float a12x = bit12 * a.x; 
-  float axx = (a.x + a12x) - a12x; // Truncates the 12 least sig bits in a.x
+  float a12x = f(bit12 * a.x); 
+  float axx = f(a.x + a12x) - a12x; // Truncates the 12 least sig bits in a.x
   float axy = a.x - axx; // The 12 least sig bits in a.x
   float cx = a.x * a.x;  // Most significant bits of the result
-  float cy = ((axx * axx - cx) + 2.0 * axx * axy) + axy * axy + 2.0 * a.x * a.y;
+  float cy = f(f(axx * axx - cx) + f(2.0 * axx * axy)) + f(axy * axy + 2.0 * a.x * a.y);
   return vec2(cx, cy);
 }
 
@@ -60,14 +66,8 @@ void main(){
     gl_FragCoord.y * (maxI - minI) / viewportDim.y + minI
   );
   */
-  vec2 dc = vec2(
-    (gl_FragCoord.x / viewportDim.x - 0.5) * rngR,
-    (gl_FragCoord.y / viewportDim.y - 0.5) * rngI
-  );
-  vec2 ch =  vec2(avgR, avgI) + dc;
-  vec2 cl = (vec2(avgR, avgI) - ch) + dc + vec2(avgRe, avgIe);
-  vec2 cx = vec2(ch.x, cl.x);
-  vec2 cy = vec2(ch.y, cl.y);
+  vec2 cx = dadd(vec2(avgR, avgRe), vec2((gl_FragCoord.x / viewportDim.x - 0.5) * rngR, 0));
+  vec2 cy = dadd(vec2(avgI, avgIe), vec2((gl_FragCoord.y / viewportDim.y - 0.5) * rngI, 0));
 
   vec2 x  = cx;
   vec2 y  = cy;
